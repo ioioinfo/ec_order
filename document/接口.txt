@@ -1,0 +1,9 @@
+1.图片验证接口
+url = "http://139.196.148.40:11111/api/captcha.png?cookie_id="+cookie_id;
+
+
+2.验证码验证
+url = "http://139.196.148.40:11111/api/verify?cookie_id=" +cookie_id + "&text=" + vertify;
+
+
+3.
