@@ -26,8 +26,8 @@ var do_post_method = function(data,url,cb){
 };
 
 exports.register = function(server, options, next){
-	var save_order = function(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,cb){
-		server.plugins['models'].orders.save_orders(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,function(err,results){
+	var save_order = function(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,cb){
+		server.plugins['models'].orders.save_orders(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err,results){
 			cb(err,results);
 		});
 	};
@@ -43,8 +43,8 @@ exports.register = function(server, options, next){
 		});
 	}
 	//更新订单状态
-	var update_order_status = function(order_id,order_status,cb){
-		server.plugins['models'].orders.update_order_status(order_id,order_status,function(err,results){
+	var update_order_status = function(order_id,order_status,change,cb){
+		server.plugins['models'].orders.update_order_status(order_id,order_status,change,function(err,results){
 			cb(err,results);
 		});
 	};
@@ -86,12 +86,13 @@ exports.register = function(server, options, next){
 				var vip_id = request.payload.vip_id;
 				var pay_way = request.payload.pay_way;
 				var store_id = request.payload.store_id;
+				var small_change = request.payload.small_change;
 				console.log("store_id: "+store_id);
 				products = JSON.parse(products);
-				if (!actual_price || !marketing_price || !pos_id || !operation_system || !origin || !products || !store_id) {
+				if (!actual_price || !marketing_price || !pos_id || !operation_system || !origin || !products || !store_id || !small_change) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
-				save_order(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,function(err, results){
+				save_order(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err, results){
 					if (results.affectedRows>0) {
 						for (var i = 0; i < products.length; i++) {
 							var product = products[i];
@@ -140,10 +141,11 @@ exports.register = function(server, options, next){
 			handler: function(request, reply){
 				var order_id = request.payload.order_id;
 				var order_status = request.payload.order_status;
-				if (!order_id || !order_status) {
+				var change = request.payload.change;
+				if (!order_id || !order_status || !change) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
-				update_order_status(order_id,order_status,function(err, results){
+				update_order_status(order_id,order_status,change,function(err, results){
 					if (results.affectedRows>0) {
 						return reply({"success":true,"message":"ok","service_info":service_info});
 					}else {
