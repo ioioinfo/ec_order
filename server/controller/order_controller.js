@@ -70,6 +70,18 @@ exports.register = function(server, options, next){
 		var url = "http://127.0.0.1:7000/find_products_with_picture?product_ids="+product_ids;
 		do_get_method(url,cb);
 	};
+	//得到所有订单信息
+	var get_all_orders = function(cb){
+		server.plugins['models'].orders.get_all_orders(function(err,results){
+			cb(err,results);
+		});
+	};
+	//根据日期得到订单信息
+	var get_orders_byDate = function(date1,date2,cb){
+		server.plugins['models'].orders.get_orders_byDate(date1,date2,function(err,results){
+			cb(err,results);
+		});
+	};
 	server.route([
 		//保存订单
 		{
@@ -261,6 +273,48 @@ exports.register = function(server, options, next){
 						}
 					}else {
 						return reply({"success":false,"message":"search order_details fail","service_info":service_info});
+					}
+				});
+			}
+		},
+		//得到所有订单
+		{
+			method: 'GET',
+			path: '/get_all_orders',
+			handler: function(request, reply){
+				get_all_orders(function(err, results){
+					if (!err) {
+						console.log("results:"+JSON.stringify(results));
+						if (results.length > 0) {
+							return reply({"success":true,"message":"ok","rows":results,"service_info":service_info});
+						}else {
+
+						}
+					}else {
+
+					}
+				});
+			}
+		},
+		//根据日期得到所有订单
+		{
+			method: 'GET',
+			path: '/get_orders_byDate',
+			handler: function(request, reply){
+				var date1 = request.query.date1;
+				var date2 = request.query.date2;
+				console.log("date1:"+date1);
+				console.log("date2:"+date2);
+				get_orders_byDate(date1,date2,function(err, results){
+					if (!err) {
+						console.log("results:"+JSON.stringify(results));
+						if (results.length > 0) {
+							return reply({"success":true,"message":"ok","rows":results,"service_info":service_info});
+						}else {
+							return reply({"success":true,"message":"ok","rows":null,"service_info":service_info});
+						}
+					}else {
+
 					}
 				});
 			}
