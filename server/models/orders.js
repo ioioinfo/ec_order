@@ -27,9 +27,9 @@ var orders = function(server) {
 			});
 		},
 		//更新订单状态
-		update_order_status: function(order_id,order_status,change,cb){
-			var query = "update orders set order_status =?, changes =? where order_id =?"
-			var columns = [order_status,change,order_id];
+		update_order_status: function(order_id,order_status,changes,ready_pay,cb){
+			var query = "update orders set order_status =?, changes =?,ready_pay=? where order_id =?"
+			var columns = [order_status,changes,ready_pay,order_id];
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {
 					connection.release();
