@@ -61,7 +61,7 @@ exports.register = function(server, options, next){
 	};
 	//批量查询商品信息
 	var find_products_with_picture = function(product_ids,cb){
-		var url = "http://127.0.0.1:7000/find_products_with_picture?product_ids="+product_ids;
+		var url = "http://127.0.0.1:18002/find_products_with_picture?product_ids="+product_ids;
 		do_get_method(url,cb);
 	};
 	//得到所有订单信息
@@ -208,7 +208,7 @@ exports.register = function(server, options, next){
 										ep.emit("store", null);
 									}
 								}else {
-									return reply({"success":false,"message":"search store fail"});
+									ep.emit("store", null);
 								}
 							});
 						}else {
@@ -237,7 +237,7 @@ exports.register = function(server, options, next){
 										ep.emit("products", null);
 									}
 								}else {
-
+									ep.emit("products", null);
 								}
 							});
 						}else {
