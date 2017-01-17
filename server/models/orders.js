@@ -44,7 +44,7 @@ var orders = function(server) {
 		},
 		//查询订单
 		search_order: function(order_id,cb){
-			var query = `select order_id,person_id,gain_point,card_reduce,total_price,small_change,changes,marketing_price,
+			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,
 			actual_price,order_date,order_status,store_id,pos_id from orders where order_id =? and flag =0`;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, [order_id], function(err, results) {
@@ -60,7 +60,7 @@ var orders = function(server) {
 		},
 		//获取所有订单信息
 		get_all_orders :  function(cb){
-			var query = `select order_id,person_id,gain_point,card_reduce,total_price,small_change,changes,marketing_price,
+			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,
 			actual_price,order_date,order_status,store_id,pos_id from orders where flag =0`;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, function(err, results) {
@@ -76,7 +76,7 @@ var orders = function(server) {
 		},
 		//根据日期查询订单
 		get_orders_byDate :  function(date1,date2,cb){
-			var query = `select order_id,person_id,gain_point,card_reduce,total_price,small_change,changes,marketing_price,
+			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,
 			actual_price,order_date,order_status,store_id,pos_id from orders where flag =0 and order_date >`+`'`+date1+`'`+` and order_date <`+`'`+date2+`'`;
 			console.log("query:"+query);
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
