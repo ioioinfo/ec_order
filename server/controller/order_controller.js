@@ -213,6 +213,7 @@ exports.register = function(server, options, next){
 							});
 						}else {
 							ep.emit("order", null);
+							ep.emit("store", null);
 						}
 					}else {
 						return reply({"success":false,"message":"search order fail","service_info":service_info});
@@ -242,6 +243,7 @@ exports.register = function(server, options, next){
 							});
 						}else {
 							ep.emit("order_details", null);
+							ep.emit("products", null);
 						}
 					}else {
 						return reply({"success":false,"message":"search order_details fail","service_info":service_info});
