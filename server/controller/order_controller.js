@@ -36,12 +36,6 @@ exports.register = function(server, options, next){
 			cb(err,results);
 		});
 	};
-	//保存付款方式
-	var save_pay_way = function(order_id,serial_number,person_id,pay_way,pay_amount,cb){
-		server.plugins['models'].pay_ways.save_pay_way(order_id,serial_number,person_id,pay_way,pay_amount,function(err,results){
-			cb(err,results);
-		});
-	}
 	//更新订单状态
 	var update_order_status = function(order_id,order_status,change,cb){
 		server.plugins['models'].orders.update_order_status(order_id,order_status,change,function(err,results){
@@ -120,28 +114,6 @@ exports.register = function(server, options, next){
 
 					}else {
 						return reply({"success":false,"message":"add order fail","service_info":service_info});
-					}
-				});
-			}
-		},
-		//保存付款方式
-		{
-			method: 'POST',
-			path: '/save_pay_way',
-			handler: function(request, reply){
-				var order_id = request.payload.order_id;
-				var serial_number = request.payload.serial_number;
-				var person_id = request.payload.person_id;
-				var pay_way = request.payload.pay_way;
-				var pay_amount = request.payload.pay_way;
-				if (!order_id || !serial_number || !person_id || !pay_way || !pay_amount ) {
-					return reply({"success":false,"message":"params wrong","service_info":service_info});
-				}
-				save_pay_way(order_id,serial_number,person_id,pay_way,pay_amount,function(err, results){
-					if (results.affectedRows>0) {
-						return reply({"success":true,"message":"ok","service_info":service_info});
-					}else {
-						return reply({"success":false,"message":"save pay_way fail","service_info":service_info});
 					}
 				});
 			}
