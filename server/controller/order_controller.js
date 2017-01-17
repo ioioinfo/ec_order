@@ -26,8 +26,8 @@ var do_post_method = function(data,url,cb){
 };
 
 exports.register = function(server, options, next){
-	var save_order = function(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,cb){
-		server.plugins['models'].orders.save_orders(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err,results){
+	var save_order = function(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,ready_pay,cb){
+		server.plugins['models'].orders.save_orders(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,ready_pay,function(err,results){
 			cb(err,results);
 		});
 	};
@@ -99,12 +99,13 @@ exports.register = function(server, options, next){
 				var pay_way = request.payload.pay_way;
 				var store_id = request.payload.store_id;
 				var small_change = request.payload.small_change;
+				var ready_pay = request.payload.ready_pay;
 				console.log("store_id: "+store_id);
 				products = JSON.parse(products);
-				if (!actual_price || !marketing_price || !pos_id || !operation_system || !origin || !products || !store_id || !small_change) {
+				if (!actual_price || !marketing_price || !pos_id || !operation_system || !origin || !products || !store_id || !small_change || !ready_pay) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
-				save_order(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err, results){
+				save_order(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,ready_pay,function(err, results){
 					if (results.affectedRows>0) {
 						for (var i = 0; i < products.length; i++) {
 							var product = products[i];
