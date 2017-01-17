@@ -10,7 +10,7 @@ var orders = function(server) {
 			created_at, updated_at, flag)
 			values
 			(uuid(),?,?,?,?,
-		 	?,?,now(),2,?,?,?,?,?,?,?,
+		 	?,?,?,now(),2,?,?,?,?,?,?,
 			now(),now(),0)` ;
 			console.log(query);
 			var columns=[order_id,vip_id, actual_price, marketing_price-actual_price, marketing_price,actual_price,ready_pay,operation_system,origin,pos_id,pay_way,store_id,small_change];
