@@ -269,13 +269,16 @@ exports.register = function(server, options, next){
 				var ep = eventproxy.create("order","order_details","store","products","pay_infos",
 					function(order,order_details,store,products,pay_infos){
 						order.store = store;
+						var total_number;
 						for (var i = 0; i < order_details.length; i++) {
 							for (var j = 0; j < products.length; j++) {
+								total_number = total_number + order_details[i].number;
 								if (order_details[i].product_id == products[j].id) {
 									order_details[i].product = products[j];
 								}
 							}
 						}
+						order.total_number = total_number;
 						order.order_details = order_details;
 						order.pay_infos = pay_infos;
 						return reply({"success":true,"row":order,"service_info":service_info});
