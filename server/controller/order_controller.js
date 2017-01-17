@@ -42,6 +42,12 @@ exports.register = function(server, options, next){
 			cb(err,results);
 		});
 	};
+	//订单支付信息
+	var get_order_pay_infos = function(order_id,cb){
+		var url = "http://139.196.148.40:18008/get_order_pay_infos?order_id=";
+		url = url + order_id;
+		do_get_method(url,cb);
+	}
 	//查询订单
 	var search_order = function(order_id,cb){
 		server.plugins['models'].orders.search_order(order_id,function(err,results){
@@ -216,7 +222,7 @@ exports.register = function(server, options, next){
 							ep.emit("store", null);
 						}
 					}else {
-						return reply({"success":false,"message":"search order fail","service_info":service_info});
+						return reply({"success":true,"message":"search order fail","service_info":service_info});
 					}
 				});
 				search_order_details(order_id,function(err, rows){
@@ -247,6 +253,102 @@ exports.register = function(server, options, next){
 						}
 					}else {
 						return reply({"success":false,"message":"search order_details fail","service_info":service_info});
+					}
+				});
+			}
+		},
+		//查询订单信息详情，支付方式
+		{
+			method: 'GET',
+			path: '/search_order_infos',
+			handler: function(request, reply){
+				var order_id = request.query.order_id;
+				if (!order_id) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				var ep = eventproxy.create("order","order_details","store","products","pay_infos",
+					function(order,order_details,store,products,pay_infos){
+						order.store = store;
+						for (var i = 0; i < order_details.length; i++) {
+							for (var j = 0; j < products.length; j++) {
+								if (order_details[i].product_id == products[j].id) {
+									order_details[i].product = products[j];
+								}
+							}
+						}
+						order.order_details = order_details;
+						order.pay_infos = pay_infos;
+						return reply({"success":true,"row":order,"service_info":service_info});
+				});
+				search_order(order_id,function(err, row){
+					if (!err) {
+						if (row.length >0) {
+							var order = row[0];
+							ep.emit("order", order);
+							var org_code = "ioio";
+							var ids = JSON.stringify([order.store_id]);
+							search_store(org_code,ids,function(err,row){
+								if (!err) {
+									if (row.success) {
+										var store = row.rows[0];
+										ep.emit("store", store);
+									}else {
+										ep.emit("store", null);
+									}
+								}else {
+									ep.emit("store", null);
+								}
+							});
+						}else {
+							ep.emit("order", null);
+							ep.emit("store", null);
+						}
+					}else {
+						return reply({"success":true,"message":"search order fail","service_info":service_info});
+					}
+				});
+				search_order_details(order_id,function(err, rows){
+					if (!err) {
+						if (rows.length >0) {
+							var order_details = rows;
+							ep.emit("order_details", order_details);
+							var product_ids = [];
+							for (var i = 0; i < rows.length; i++) {
+								product_ids.push(rows[i].product_id);
+							}
+							product_ids = JSON.stringify(product_ids);
+							find_products_with_picture(product_ids,function(err, rows){
+								if (!err) {
+									if (rows) {
+										var products = rows.products;
+										ep.emit("products", products);
+									}else {
+										ep.emit("products", null);
+									}
+								}else {
+									ep.emit("products", null);
+								}
+							});
+						}else {
+							ep.emit("order_details", null);
+							ep.emit("products", null);
+						}
+					}else {
+						return reply({"success":false,"message":"search order_details fail","service_info":service_info});
+					}
+				});
+
+				get_order_pay_infos(order_id, function(err,row){
+					if (!err) {
+						if (row.success) {
+							var pay_infos = row.rows;
+							console.log("pay_infos"+pay_infos);
+							ep.emit("pay_infos", pay_infos);
+						}else {
+							ep.emit("pay_infos", null);
+						}
+					}else {
+						ep.emit("pay_infos", null);
 					}
 				});
 			}
