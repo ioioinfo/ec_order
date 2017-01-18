@@ -91,6 +91,23 @@ var orders = function(server) {
 				});
 			});
 		},
+		//根据personid和日期查询订单
+		get_member_orders: function(person_id,date1,date2,cb){
+			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,
+			actual_price,order_date,order_status,store_id,pos_id from orders where flag =0 and person_id = ? and order_date > ? and order_date < ?`;
+			var columns = [person_id,date1,date2];
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query,columns, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,results);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 
 	};
 };

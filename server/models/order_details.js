@@ -37,7 +37,7 @@ var order_details = function(server) {
 				});
 			});
 		},
-		//查询订单详细
+		//查询订单详细 批量
 		search_order_details: function(order_id,cb){
 			var query = `select order_id,product_id,number,price,discount,total_price,discount_price from order_details where order_id =? and flag =0`;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
@@ -52,8 +52,6 @@ var order_details = function(server) {
 				});
 			});
 		},
-
-
 
 
 	};

@@ -82,6 +82,12 @@ exports.register = function(server, options, next){
 			cb(err,results);
 		});
 	};
+	//查询会员订单
+	var get_member_orders = function(person_id,date1,date2,cb){
+		server.plugins['models'].orders.get_member_orders(person_id,date1,date2,function(err,results){
+			cb(err,results);
+		});
+	};
 	server.route([
 		//保存订单
 		{
@@ -383,8 +389,9 @@ exports.register = function(server, options, next){
 			handler: function(request, reply){
 				var date1 = request.query.date1;
 				var date2 = request.query.date2;
-				console.log("date1:"+date1);
-				console.log("date2:"+date2);
+				if (!date1 || !date2) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
 				get_orders_byDate(date1,date2,function(err, results){
 					if (!err) {
 						console.log("results:"+JSON.stringify(results));
@@ -399,7 +406,35 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
+		//查询会员订单，开始时间-结束时间
+		{
+			method: 'GET',
+			path: '/search_member_orders',
+			handler: function(request, reply){
+				var person_id = request.query.person_id;
+				var date1 = request.query.date1;
+				var date2 = request.query.date2;
+				if (!person_id || !date1 || !date2) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				get_member_orders(person_id,date1,date2,function(err, results){
+					if (!err) {
+						console.log("results:"+JSON.stringify(results));
+						if (results.length > 0) {
+							for (var i = 0; i < results.length; i++) {
+								var order_id = results[i].order_id;
 
+							}
+							return reply({"success":true,"message":"ok","rows":results,"service_info":service_info});
+						}else {
+							return reply({"success":true,"message":"ok","rows":null,"service_info":service_info});
+						}
+					}else {
+						return reply({"success":false,"message":"search fail","service_info":service_info});
+					}
+				});
+			}
+		},
 	]);
 
     next();
