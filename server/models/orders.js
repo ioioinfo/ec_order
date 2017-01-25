@@ -3,7 +3,7 @@ var EventProxy = require('eventproxy');
 
 var orders = function(server) {
 	return {
-		//保存订单
+		//保存采购订单
 		save_orders : function(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change, cb) {
 			var query = `insert into orders (id, order_id, person_id, gain_point, card_reduce,
 			marketing_price, actual_price,order_date, order_status, operation_system, origin, pos_id, pay_way,store_id,small_change,

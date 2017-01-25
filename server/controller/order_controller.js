@@ -54,6 +54,15 @@ exports.register = function(server, options, next){
 			cb(err,results);
 		});
 	};
+	//生成pos单号
+	var generate_order_no = function(cb){
+		var url = "http://211.149.248.241:18011/generate_order_no"
+		var data = {
+			org_code : "ioio",
+			order_type : "pos"
+		};
+		do_post_method(data,url,cb);
+	};
 	//查询订单详细
 	var search_order_details = function(order_id,cb){
 		server.plugins['models'].order_details.search_order_details(order_id,function(err,results){
@@ -99,7 +108,6 @@ exports.register = function(server, options, next){
 				var pos_id = request.payload.pos_id;
 				var operation_system = request.payload.operation_system;
 				var origin = request.payload.origin;
-				var order_id = uuidV1();
 				var products = request.payload.products;
 				var vip_id = request.payload.vip_id;
 				var pay_way = request.payload.pay_way;
@@ -107,25 +115,36 @@ exports.register = function(server, options, next){
 				var small_change = request.payload.small_change;
 				console.log("store_id: "+store_id);
 				products = JSON.parse(products);
+				var order_id;
 				if (!actual_price || !marketing_price || !pos_id || !operation_system || !origin || !products || !store_id || !small_change) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
-				save_order(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err, results){
-					if (results.affectedRows>0) {
-						for (var i = 0; i < products.length; i++) {
-							var product = products[i];
-							product.order_index = i+1;
+				generate_order_no(function(err,row){
+					if (!err) {
+						if (row.success) {
+							order_id = row.order_no;
+							save_order(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err, results){
+								if (results.affectedRows>0) {
+									for (var i = 0; i < products.length; i++) {
+										var product = products[i];
+										product.order_index = i+1;
+									}
+									save_order_details(order_id, products, function(err, results){
+										if (results.affectedRows>0) {
+											return reply({"success":true,"message":"ok","order_id":order_id,"service_info":service_info});
+										}else {
+											return reply({"success":false,"message":"add order detail fail","service_info":service_info});
+										}
+									});
+								}else {
+									return reply({"success":false,"message":"add order fail","service_info":service_info});
+								}
+							});
+						}else {
+							return reply({"success":false,"message":"params wrong","service_info":service_info});
 						}
-						save_order_details(order_id, products, function(err, results){
-							if (results.affectedRows>0) {
-								return reply({"success":true,"message":"ok","order_id":order_id,"service_info":service_info});
-							}else {
-								return reply({"success":false,"message":"add order detail fail","service_info":service_info});
-							}
-						});
-
 					}else {
-						return reply({"success":false,"message":"add order fail","service_info":service_info});
+						return reply({"success":false,"message":"params wrong","service_info":service_info});
 					}
 				});
 			}
