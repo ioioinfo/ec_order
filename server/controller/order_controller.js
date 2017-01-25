@@ -294,6 +294,9 @@ exports.register = function(server, options, next){
 				}
 				var ep = eventproxy.create("order","order_details","store","products","pay_infos",
 					function(order,order_details,store,products,pay_infos){
+						if (!order) {
+							return reply({"success":false,"message":"order is null","service_info":service_info});
+						}
 						order.store = store;
 						var total_number = 0;
 						for (var i = 0; i < order_details.length; i++) {
@@ -319,8 +322,13 @@ exports.register = function(server, options, next){
 							search_store(org_code,ids,function(err,row){
 								if (!err) {
 									if (row.success) {
-										var store = row.rows[0];
-										ep.emit("store", store);
+										if (row.rows.length>0) {
+											var store = row.rows[0];
+											ep.emit("store", store);
+										}else {
+											ep.emit("store", null);
+										}
+
 									}else {
 										ep.emit("store", null);
 									}
