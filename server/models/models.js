@@ -3,6 +3,11 @@ exports.register = function(server, options, next){
 
 	server.expose('orders', require('./orders.js')(server));
 	server.expose('order_details', require('./order_details.js')(server));
+	server.expose('products_ec_orders', require('./products_ec_orders.js')(server));
+	server.expose('products_ec_orders_details', require('./products_ec_orders_details.js')(server));
+	server.expose('order_addresses', require('./order_addresses.js')(server));
+	server.expose('order_logistics', require('./order_logistics.js')(server));
+	server.expose('normal_invoices', require('./normal_invoices.js')(server));
 	next();
 }
 

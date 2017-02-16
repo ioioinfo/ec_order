@@ -69,7 +69,9 @@ server.register([
 	{
 	  register: require('./server/models/models.js')
 	},
-
+	{
+	  register: require('./server/controller/ec_order_controller.js')
+	},
 
 ], function () {
     //Start the server

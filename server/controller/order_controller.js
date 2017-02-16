@@ -26,6 +26,7 @@ var do_post_method = function(data,url,cb){
 };
 
 exports.register = function(server, options, next){
+	//pos端
 	var save_order = function(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,cb){
 		server.plugins['models'].orders.save_orders(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err,results){
 			cb(err,results);
@@ -97,7 +98,14 @@ exports.register = function(server, options, next){
 			cb(err,results);
 		});
 	};
+
+
+	//ec端
+
+
+
 	server.route([
+		//pos端
 		//保存订单
 		{
 			method: 'POST',
@@ -462,6 +470,11 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
+
+
+
+
+
 	]);
 
     next();

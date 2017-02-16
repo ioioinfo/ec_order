@@ -3,6 +3,7 @@ var EventProxy = require('eventproxy');
 
 var orders = function(server) {
 	return {
+		//pos端
 		//保存采购订单
 		save_orders : function(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change, cb) {
 			var query = `insert into orders (id, order_id, person_id, gain_point, card_reduce,
@@ -108,6 +109,7 @@ var orders = function(server) {
 				});
 			});
 		},
+
 
 	};
 };
