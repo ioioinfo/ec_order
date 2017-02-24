@@ -48,6 +48,29 @@ var products_ec_orders = function(server) {
 				cb(false,results);
 			});
 		},
+		//保存订单信息
+		save_order_infos :function(order_id,person_id,gain_point,actual_price,total_number,weight,order_status,origin,cb) {
+			var query = `insert into products_ec_orders(id, order_id, person_id, gain_point,
+				actual_price, total_number, weight, order_status, origin, created_at,
+				updated_at, flag) values (uuid(), ?, ?, ?, ?, ?,
+				?, ?, ?, now(), now(), 0)` ;
+			console.log(query);
+			var columns=[order_id,person_id,gain_point,actual_price,total_number,weight,order_status,origin];
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, columns, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,results);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
+
+
+
 	};
 };
 

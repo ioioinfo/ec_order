@@ -19,7 +19,25 @@ var products_ec_orders_details = function(server) {
 				});
 			});
 		},
-
+		//保存订单详细
+		save_ec_order_details: function(order_id,product_id,order_index,number,price,marketing_price,total_price,cb) {
+			var query = `insert into products_ec_orders_details(id, order_id, product_id, order_index,
+				number, price, marketing_price, total_price, created_at, updated_at,
+				flag) values (uuid(), ?, ?, ?, ?, ?, ?, ?, now(), now(), 0)` ;
+			console.log(query);
+			var columns=[order_id,product_id,order_index,number,price,marketing_price,total_price];
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, columns, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,results);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 
 	};
 };

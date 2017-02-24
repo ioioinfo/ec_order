@@ -112,6 +112,27 @@ exports.register = function(server, options, next){
 			cb(err,results);
 		});
 	};
+	//选中购物车信息
+	var search_selected_carts = function(person_id,ids,cb){
+		var url = "http://127.0.0.1:8030/search_selected_carts?person_id=";
+		url = url + person_id + "&ids=" + ids;
+		do_get_method(url,cb);
+	};
+	//生成pos单号
+	var generate_order_no = function(cb){
+		var url = "http://211.149.248.241:18011/generate_order_no"
+		var data = {
+			org_code : "ioio",
+			order_type : "ec_order"
+		};
+		do_post_method(url,data,cb);
+	};
+	//删除购物车
+	var delete_shopping_carts = function(ids,cb){
+		var url = "http://127.0.0.1:8030/delete_shopping_carts?ids=";
+		url = url + ids;
+		do_get_method(url,cb);
+	};
 	server.route([
 		//得到所有订单
 		{
@@ -162,15 +183,15 @@ exports.register = function(server, options, next){
 										return reply({"success":true,"message":"ok","orders":results,"details":order_map,"products":products_map,"service_info":service_info});
 									}else {
 										console.log("err:"+err);
-										return reply({"success":false,"message":results});
+										return reply({"success":false,"message":rows.message,"service_info":service_info});
 									}
 								});
 							}else {
-								return reply({"success":false,"message":results});
+								return reply({"success":false,"message":content.message,"service_info":service_info});
 							}
 						});
 					}else {
-						return reply({"success":false,"message":results});
+						return reply({"success":false,"message":results.message,"service_info":service_info});
 					}
 				});
 			}
@@ -228,15 +249,15 @@ exports.register = function(server, options, next){
 										return reply({"success":true,"message":"ok","orders":results,"details":order_map,"products":products_map,"service_info":service_info});
 									}else {
 										console.log("err:"+errs);
-										return reply({"success":false,"message":errs,"service_info":service_info});
+										return reply({"success":false,"message":rows.message,"service_info":service_info});
 									}
 								});
 							}else {
-								return reply({"success":false,"message":error,"service_info":service_info});
+								return reply({"success":false,"message":content.message,"service_info":service_info});
 							}
 						});
 					}else {
-						return reply({"success":false,"message":err,"service_info":service_info});
+						return reply({"success":false,"message":results.message,"service_info":service_info});
 					}
 				});
 			}
@@ -254,7 +275,7 @@ exports.register = function(server, options, next){
 					if (!err) {
 						return reply({"success":true,"address":result,"service_info":service_info})
 					}else {
-						return reply({"success":false,"message":err,"service_info":service_info})
+						return reply({"success":false,"message":result.message,"service_info":service_info});
 					}
 				});
 			}
@@ -278,11 +299,11 @@ exports.register = function(server, options, next){
 							if (!err) {
 								return reply({"success":true,"row":results.row,"service_info":service_info});
 							}else {
-
+								return reply({"success":false,"message":results.message,"service_info":service_info});
 							}
 						});
 					}else {
-
+						return reply({"success":false,"message":results.message,"service_info":service_info});
 					}
 				});
 			}
@@ -307,11 +328,11 @@ exports.register = function(server, options, next){
 							if (!err) {
 								return reply({"success":true,"rows":results.rows,"order_logistics":order_logistics,"service_info":service_info});
 							}else {
-
+								return reply({"success":false,"message":results.message,"service_info":service_info});
 							}
 						});
 					}else {
-
+						return reply({"success":false,"message":results.message,"service_info":service_info});
 					}
 				});
 			}
@@ -347,9 +368,101 @@ exports.register = function(server, options, next){
 				search_ec_invoices(person_id,order_id,function(err,result){
 					console.log("result:"+JSON.stringify(result));
 					if (!err) {
-						return reply({"success":true,"result":result,"service_info":service_info});
+						return reply({"success":true,"rows":result,"service_info":service_info});
 					}else {
+						return reply({"success":false,"message":result.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+		//保存订单表
+		{
+			method: 'POST',
+			path: '/save_order_infos',
+			handler: function(request, reply){
+				var person_id = request.payload.person_id;
+				var total_data = request.payload.total_data;
+				var shopping_carts = request.payload.shopping_carts;
+				if (!person_id || !total_data || !shopping_carts) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				shopping_carts = JSON.parse(shopping_carts);
+				total_data = JSON.parse(total_data);
+				var ids = [];
+				for (var i = 0; i < shopping_carts.length; i++) {
+					ids.push(shopping_carts[i].id);
+				}
+				ids = JSON.stringify(ids);
+				//根据页面的购物车对象中的id查询数据库的购物车和产品信息
+				var data_base_carts;
+				var data_base_total_data;
+				var data_base_products;
+				search_selected_carts(person_id,ids,function(err,results){
+					if (!err) {
+						data_base_carts = results.shopping_carts;
+						data_base_products = results.products;
+						data_base_total_data = results.total_data;
+						console.log("data_base_carts:"+data_base_carts);
+						//和页面传的购物车里信息核实
+						for (var i = 0; i < shopping_carts.length; i++) {
+							var per_price = shopping_carts[i].per_price;
+							//商品单价对比
+							if (shopping_carts[i].product_id == data_base_products[shopping_carts[i].product_id].id) {
+								if (per_price != data_base_products[shopping_carts[i].product_id].product_sale_price) {
+									return reply({"success":false,"message":"商品价格有问题！"});
+								}
+							}
+						}
+						//商品总数，总价对比
+						if (total_data.total_prices != data_base_total_data.total_prices || total_data.total_items != data_base_total_data.total_items) {
+							return reply({"success":false,"message":"商品总价或者数量有问题！"});
+						}
+						var gain_point = data_base_total_data.total_prices;
+						var actual_price = data_base_total_data.total_prices;
+						var total_number = data_base_total_data.total_items;
+						var weight = data_base_total_data.total_weight;
+						var order_status = 0;
+						//details data
+						var products = data_base_products;
+						var origin = "ec_mp";
 
+						generate_order_no(function(err,row){
+							console.log("generate_order_no:"+JSON.stringify(row));
+							if (!err) {
+								order_id = row.order_no;
+								server.plugins['models'].products_ec_orders.save_order_infos(order_id,person_id,gain_point,actual_price,total_number,weight,order_status,origin,function(err,results){
+									if (!err){
+										for (var i = 0; i < shopping_carts.length; i++) {
+											var product_id = shopping_carts[i].product_id;
+											var order_index = i+1;
+											var number = shopping_carts[i].total_items;
+											var price = products[shopping_carts[i].product_id].product_sale_price;
+											var marketing_price = products[shopping_carts[i].product_id].product_marketing_price;
+											var total_price = price * number;
+											server.plugins['models'].products_ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,function(err,results){
+												if (!err){
+												}else {
+													return reply({"success":false,"message":results.message,"service_info":service_info});
+												}
+											});
+										}
+										delete_shopping_carts(ids,function(err,content){
+											if (!err) {
+												return reply({"success":true,"message":"ok","service_info":service_info});
+											}else {
+												return reply({"success":false,"message":results.message,"service_info":service_info});
+											}
+										});
+									}else {
+										return reply({"success":false,"message":results.message,"service_info":service_info});
+									}
+								});
+							}else {
+								return reply({"success":false,"message":row.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":"购物车查不到"});
 					}
 				});
 			}
