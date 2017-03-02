@@ -49,9 +49,14 @@ var do_result = function(err,result,cb){
 	}
 };
 exports.register = function(server, options, next){
+	//物流运费
+	var logistics_payment = function(data,cb){
+		var url = "http://211.149.248.241:18013/freightage/compute";
+		do_post_method(url,data,cb);
+	};
 	//查询ec所有订单
-	var get_ec_orders = function(cb){
-		server.plugins['models'].products_ec_orders.get_ec_orders(function(err,results){
+	var get_ec_orders = function(person_id,cb){
+		server.plugins['models'].products_ec_orders.get_ec_orders(person_id,function(err,results){
 			cb(err,results);
 		});
 	};
@@ -139,8 +144,15 @@ exports.register = function(server, options, next){
 			method: 'GET',
 			path: '/get_ec_orders',
 			handler: function(request, reply){
-				get_ec_orders(function(err, results){
+				var person_id = request.query.person_id;
+				if (!person_id) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				get_ec_orders(person_id,function(err, results){
 					if (!err) {
+						if (!results || results.length == 0) {
+							return reply({"success":true,"message":"ok","orders":results,"details":{},"products":{},"service_info":service_info});
+						}
 						var order_ids = [];
 						for (var i = 0; i < results.length; i++) {
 							order_ids.push(results[i].order_id);
@@ -418,47 +430,62 @@ exports.register = function(server, options, next){
 							return reply({"success":false,"message":"商品总价或者数量有问题！"});
 						}
 						var gain_point = data_base_total_data.total_prices;
-						var actual_price = data_base_total_data.total_prices;
+						var products_price = data_base_total_data.total_prices;
 						var total_number = data_base_total_data.total_items;
 						var weight = data_base_total_data.total_weight;
 						var order_status = 0;
 						//details data
 						var products = data_base_products;
 						var origin = "ec_mp";
-
-						generate_order_no(function(err,row){
-							console.log("generate_order_no:"+JSON.stringify(row));
+						if (!weight) {
+							weight = 0;
+						}
+						var info = {
+							"end_area" : "广东省",
+							"weight" : weight,
+							"order_amount" : total_number
+						};
+						logistics_payment(info,function(err,result){
 							if (!err) {
-								order_id = row.order_no;
-								server.plugins['models'].products_ec_orders.save_order_infos(order_id,person_id,gain_point,actual_price,total_number,weight,order_status,origin,function(err,results){
-									if (!err){
-										for (var i = 0; i < shopping_carts.length; i++) {
-											var product_id = shopping_carts[i].product_id;
-											var order_index = i+1;
-											var number = shopping_carts[i].total_items;
-											var price = products[shopping_carts[i].product_id].product_sale_price;
-											var marketing_price = products[shopping_carts[i].product_id].product_marketing_price;
-											var total_price = price * number;
-											server.plugins['models'].products_ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,function(err,results){
-												if (!err){
-												}else {
-													return reply({"success":false,"message":results.message,"service_info":service_info});
+								var amount = result.row.user_amount;
+								var actual_price = amount + products_price;
+								generate_order_no(function(err,row){
+									console.log("generate_order_no:"+JSON.stringify(row));
+									if (!err) {
+										order_id = row.order_no;
+										server.plugins['models'].products_ec_orders.save_order_infos(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,function(err,results){
+											if (!err){
+												for (var i = 0; i < shopping_carts.length; i++) {
+													var product_id = shopping_carts[i].product_id;
+													var order_index = i+1;
+													var number = shopping_carts[i].total_items;
+													var price = products[shopping_carts[i].product_id].product_sale_price;
+													var marketing_price = products[shopping_carts[i].product_id].product_marketing_price;
+													var total_price = price * number;
+													server.plugins['models'].products_ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,function(err,results){
+														if (!err){
+														}else {
+															return reply({"success":false,"message":results.message,"service_info":service_info});
+														}
+													});
 												}
-											});
-										}
-										delete_shopping_carts(ids,function(err,content){
-											if (!err) {
-												return reply({"success":true,"message":"ok","service_info":service_info});
+												delete_shopping_carts(ids,function(err,content){
+													if (!err) {
+														return reply({"success":true,"message":"ok","service_info":service_info});
+													}else {
+														return reply({"success":false,"message":results.message,"service_info":service_info});
+													}
+												});
 											}else {
 												return reply({"success":false,"message":results.message,"service_info":service_info});
 											}
 										});
 									}else {
-										return reply({"success":false,"message":results.message,"service_info":service_info});
+										return reply({"success":false,"message":row.message,"service_info":service_info});
 									}
 								});
 							}else {
-								return reply({"success":false,"message":row.message,"service_info":service_info});
+								return reply({"success":false,"message":results.message,"service_info":service_info});
 							}
 						});
 					}else {
