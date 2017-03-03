@@ -64,13 +64,16 @@ server.register([
       register: require('./server/assets/index.js')
     },
 	{
-	  register: require('./server/controller/order_controller.js')
+	  register: require('./server/controller/pos_order_controller.js')
 	},
 	{
 	  register: require('./server/models/models.js')
 	},
 	{
 	  register: require('./server/controller/ec_order_controller.js')
+	},
+	{
+	  register: require('./server/controller/logistics_controller.js')
 	},
 
 ], function () {

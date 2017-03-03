@@ -4,6 +4,7 @@ const uuidV1 = require('uuid/v1');
 var eventproxy = require('eventproxy');
 var service_info = "ec order service";
 var order_status = {
+	"-1": "等待买家付款",
 	"0" : "付款确认中",
 	"1" : "买家已付款",
 	"2" : "等待卖家发货",
@@ -433,7 +434,7 @@ exports.register = function(server, options, next){
 						var products_price = data_base_total_data.total_prices;
 						var total_number = data_base_total_data.total_items;
 						var weight = data_base_total_data.total_weight;
-						var order_status = 0;
+						var order_status = -1;
 						//details data
 						var products = data_base_products;
 						var origin = "ec_mp";

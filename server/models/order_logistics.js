@@ -32,6 +32,27 @@ var order_logistics = function(server) {
 				cb(false,results);
 			});
 		},
+		//保存物流信息
+		save_logistcs_info : function(order_id,amount,cb) {
+			var query = `insert into order_logistics (logistics_id,order_id,actual_payment,
+			created_at, updated_at, flag)
+			values
+			(uuid(),?,?,
+			now(),now(),0)` ;
+			console.log(query);
+			var columns=[order_id,amount];
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, columns, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,results);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 
 	};
 };

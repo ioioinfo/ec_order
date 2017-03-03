@@ -481,5 +481,5 @@ exports.register = function(server, options, next){
 };
 
 exports.register.attributes = {
-    name: 'order_controller'
+    name: 'pos_order_controller'
 };
