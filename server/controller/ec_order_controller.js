@@ -396,6 +396,8 @@ exports.register = function(server, options, next){
 				var person_id = request.payload.person_id;
 				var total_data = request.payload.total_data;
 				var shopping_carts = request.payload.shopping_carts;
+				var send_seller = request.payload.send_seller;
+				var address = request.payload.address;
 				if (!person_id || !total_data || !shopping_carts) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
@@ -442,7 +444,7 @@ exports.register = function(server, options, next){
 							weight = 0;
 						}
 						var info = {
-							"end_area" : "广东省",
+							"end_area" : JSON.parse(address).province,
 							"weight" : weight,
 							"order_amount" : total_number
 						};
@@ -454,7 +456,7 @@ exports.register = function(server, options, next){
 									console.log("generate_order_no:"+JSON.stringify(row));
 									if (!err) {
 										order_id = row.order_no;
-										server.plugins['models'].products_ec_orders.save_order_infos(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,function(err,results){
+										server.plugins['models'].products_ec_orders.save_order_infos(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,send_seller,address,function(err,results){
 											if (!err){
 												for (var i = 0; i < shopping_carts.length; i++) {
 													var product_id = shopping_carts[i].product_id;
