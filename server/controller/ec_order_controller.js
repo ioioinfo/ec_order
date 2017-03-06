@@ -120,7 +120,7 @@ exports.register = function(server, options, next){
 	};
 	//选中购物车信息
 	var search_selected_carts = function(person_id,ids,cb){
-		var url = "http://127.0.0.1:8030/search_selected_carts?person_id=";
+		var url = "http://127.0.0.1:18015/search_selected_carts?person_id=";
 		url = url + person_id + "&ids=" + ids;
 		do_get_method(url,cb);
 	};
@@ -135,7 +135,7 @@ exports.register = function(server, options, next){
 	};
 	//删除购物车
 	var delete_shopping_carts = function(ids,cb){
-		var url = "http://127.0.0.1:8030/delete_shopping_carts?ids=";
+		var url = "http://127.0.0.1:18015/delete_shopping_carts?ids=";
 		url = url + ids;
 		do_get_method(url,cb);
 	};
