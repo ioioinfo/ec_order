@@ -136,6 +136,7 @@ exports.register = function(server, options, next){
 									for (var i = 0; i < products.length; i++) {
 										var product = products[i];
 										product.order_index = i+1;
+										product.total_price = product.discount_product_price * product.product_number;
 									}
 									save_order_details(order_id, products, function(err, results){
 										if (results.affectedRows>0) {

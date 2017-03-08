@@ -21,6 +21,7 @@ var order_details = function(server) {
 				columns.push(products[i].product_number);
 				columns.push(products[i].product_price);
 				columns.push(products[i].product_discount);
+				columns.push(products[i].total_price);
 				columns.push(products[i].discount_product_price);
 			}
 			console.log(query);
