@@ -46,7 +46,10 @@ var orders = function(server) {
 		//查询订单
 		search_order: function(order_id,cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,
-			actual_price,order_date,order_status,store_id,pos_id from orders where order_id =? and flag =0`;
+				actual_price,order_date,DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text,order_status,store_id,pos_id
+				from orders
+				where order_id =? and flag =0
+			`;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, [order_id], function(err, results) {
 					connection.release();
@@ -62,7 +65,7 @@ var orders = function(server) {
 		//获取所有订单信息
 		get_all_orders :  function(cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,
-			actual_price,order_date,order_status,store_id,pos_id from orders where flag =0`;
+			actual_price,order_date,DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text,order_status,store_id,pos_id from orders where flag =0`;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, function(err, results) {
 					connection.release();
