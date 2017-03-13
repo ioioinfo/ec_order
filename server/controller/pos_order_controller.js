@@ -98,14 +98,111 @@ exports.register = function(server, options, next){
 			cb(err,results);
 		});
 	};
-
-
-	//ec端
-
-
-
+	//订单支付信息
+		var get_order_pay_infos = function(order_id,cb){
+			var url = "http://139.196.148.40:18008/get_order_pay_infos?order_id=";
+			url = url + order_id;
+			do_get_method(url,cb);
+		};
 	server.route([
 		//pos端
+		//单条信息的支付，产品，等详情
+		{
+			method: 'GET',
+			path: '/get_order_details',
+			handler: function(request, reply){
+				var order_id = request.query.order_id;
+				if (!order_id) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				var ep = eventproxy.create("order_details","products","pay_infos",
+					function(order_details,products,pay_infos){
+						return reply({"success":true,"order_details":order_details,"pay_infos":pay_infos,"products":products,"service_info":service_info});
+				});
+				get_order_pay_infos(order_id, function(err,row){
+					if (!err) {
+						if (row.success) {
+							var pay_infos = row.rows;
+							console.log("pay_infos"+pay_infos);
+							ep.emit("pay_infos", pay_infos);
+						}else {
+							ep.emit("pay_infos", null);
+						}
+					}else {
+						ep.emit("pay_infos", null);
+					}
+				});
+				search_order_details(order_id,function(err, rows){
+					if (!err) {
+						if (rows.length >0) {
+							var order_details = rows;
+							ep.emit("order_details", order_details);
+							var product_ids = [];
+							for (var i = 0; i < rows.length; i++) {
+								product_ids.push(rows[i].product_id);
+							}
+							product_ids = JSON.stringify(product_ids);
+							find_products_with_picture(product_ids,function(err, rows){
+								if (!err) {
+									if (rows) {
+										var products = rows.products;
+										ep.emit("products", products);
+									}else {
+										ep.emit("products", null);
+									}
+								}else {
+									ep.emit("products", null);
+								}
+							});
+						}else {
+							ep.emit("order_details", null);
+							ep.emit("products", null);
+						}
+					}else {
+						ep.emit("order_details", null);
+						ep.emit("products", null);
+					}
+				});
+
+			}
+		},
+		//查询订单,及订详细,商品信息
+		{
+			method: 'GET',
+			path: '/search_order_info',
+			handler: function(request, reply){
+				var order_id = request.query.order_id;
+				if (!order_id) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				search_order(order_id,function(err, row){
+					if (!err) {
+						if (row.length >0) {
+							var order = row[0];
+							var org_code = "ioio";
+							var ids = JSON.stringify([order.store_id]);
+							search_store(org_code,ids,function(err,row){
+								if (!err) {
+									if (row.success) {
+										var store = row.rows[0];
+										order.store = store;
+											return reply({"success":true,"message":"ok","order":order,"service_info":service_info});
+									}else {
+										return reply({"success":false,"message":row.message,"service_info":service_info});
+									}
+								}else {
+									return reply({"success":false,"message":row.message,"service_info":service_info});
+								}
+							});
+						}else {
+							return reply({"success":true,"message":"search order null","service_info":service_info});
+						}
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 		//保存订单
 		{
 			method: 'POST',
@@ -471,6 +568,7 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
+		//根据订单号查订单信息
 
 
 

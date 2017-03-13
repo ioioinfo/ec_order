@@ -140,6 +140,83 @@ exports.register = function(server, options, next){
 		do_get_method(url,cb);
 	};
 	server.route([
+
+		// 订单明细
+		{
+			method: 'GET',
+			path: '/get_mp_order_details',
+			handler: function(request, reply){
+				var order_id = request.query.order_id;
+				if (!order_id) {
+					return reply({"success":false,"message":"params null","service_info":service_info});
+				}
+				var order_ids = [];
+				order_ids.push(order_id);
+				get_ec_all_details(order_ids,function(error,content){
+					if (!error) {
+						var product_ids = [];
+						for (var i = 0; i < content.length; i++) {
+							var order_detail = content[i];
+							product_ids.push(order_detail.product_id);
+						}
+						product_ids = JSON.stringify(product_ids);
+						find_products_with_picture(product_ids,function(errs, rows){
+							if (!errs) {
+								var products = rows.products;
+								var products_map = {};
+								for (var i = 0; i < products.length; i++) {
+									var product = products[i];
+									products_map[product.id] = product;
+								}
+								return reply({"success":true,"message":"ok","details":content,"products":products_map,"service_info":service_info});
+							}else {
+								return reply({"success":false,"message":rows.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":content.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+
+		//按订单号查询
+		{
+			method: 'GET',
+			path: '/get_order',
+			handler: function(request, reply){
+				var order_id = request.query.order_id;
+				if (!order_id) {
+					return reply({"success":false,"message":"params null","service_info":service_info});
+				}
+				server.plugins['models'].products_ec_orders.get_order(order_id,function(err,result){
+					if (!err) {
+						console.log(JSON.stringify(result));
+						if (result.length >0) {
+							return reply({"success":true,"message":"ok","order":result,"service_info":service_info});
+						}else {
+							return reply({"success":false,"message":"没有找到订单","service_info":service_info});
+						}
+					}else {
+						return reply({"success":false,"message":results.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+		//订单列表
+		{
+			method: 'GET',
+			path: '/mp_orders_list',
+			handler: function(request, reply){
+				server.plugins['models'].products_ec_orders.mp_orders_list(function(err,results){
+					if (!err) {
+						return reply({"success":true,"message":"ok","orders":results,"service_info":service_info});
+					}else {
+						return reply({"success":false,"message":results.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 		//得到所有订单
 		{
 			method: 'GET',
@@ -184,6 +261,7 @@ exports.register = function(server, options, next){
 								}
 								console.log("order_map:"+JSON.stringify(order_map));
 								product_ids = JSON.stringify(product_ids);
+								console.log("product_ids:"+product_ids);
 								find_products_with_picture(product_ids,function(err, rows){
 									console.log("row:"+JSON.stringify(rows));
 									if (!err) {

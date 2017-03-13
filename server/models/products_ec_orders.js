@@ -3,6 +3,49 @@ var EventProxy = require('eventproxy');
 
 var products_ec_orders = function(server) {
 	return {
+		//单个订单查询
+		get_order : function(order_id, cb){
+			var query = `select order_id,person_id,gain_point,card_reduce,
+				total_number,logistics_price,actual_price,send_seller,weight,
+				linkname,detail_address,mobile,province,city,district,cancel_reason,
+				products_price,order_date,order_status,store_id,pay_way,created_at
+				from products_ec_orders
+				where flag =0 and order_id = ?
+			`;
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query,[order_id], function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,null);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
+
+		//订单列表
+		mp_orders_list : function(cb){
+			var query = `select order_id,person_id,gain_point,card_reduce,
+				total_number,logistics_price,actual_price,send_seller,weight,
+				linkname,detail_address,mobile,province,city,district,cancel_reason,
+				products_price,order_date,order_status,store_id,pay_way,created_at
+				from products_ec_orders
+				where flag =0
+			`;
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,null);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 		//获取一个人所有订单信息
 		get_ec_orders :  function(person_id,cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,
