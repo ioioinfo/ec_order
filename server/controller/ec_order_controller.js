@@ -10,7 +10,7 @@ var order_status = {
 	"2" : "等待卖家发货",
 	"3" : "卖家已发货",
 	"4" : "等待买家收货",
-	"5" : "交易成功",
+	"5" : "交易成功",   
 	"6" : "交易关闭",
 	"7" : "退款中订单",
 	"8" : "等待买家评价"
@@ -522,9 +522,14 @@ exports.register = function(server, options, next){
 							weight = 0;
 						}
 						var info = {
-							"end_area" : JSON.parse(address).province,
+							"type" : JSON.parse(address).type,
+							"store_id" : JSON.parse(address).store_id,
+							"point_id" : JSON.parse(address).point_id,
 							"weight" : weight,
-							"order_amount" : total_number
+							"order_amount" : total_number,
+							"end_province" :JSON.parse(address).province,
+							"end_city" : JSON.parse(address).city,
+							"end_district" : JSON.parse(address).district
 						};
 						logistics_payment(info,function(err,result){
 							if (!err) {
