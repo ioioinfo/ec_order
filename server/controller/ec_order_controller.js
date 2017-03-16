@@ -10,7 +10,7 @@ var order_status = {
 	"2" : "等待卖家发货",
 	"3" : "卖家已发货",
 	"4" : "等待买家收货",
-	"5" : "交易成功",   
+	"5" : "交易成功",
 	"6" : "交易关闭",
 	"7" : "退款中订单",
 	"8" : "等待买家评价"
@@ -139,8 +139,83 @@ exports.register = function(server, options, next){
 		url = url + ids;
 		do_get_method(url,cb);
 	};
+	//批量查询商品信息
+	var get_productById = function(product_id,cb){
+		var url = "http://127.0.0.1:18002/product_info?product_id="+product_id;
+		do_get_method(url,cb);
+	};
 	server.route([
-
+		//保存立即购买订单
+		{
+			method: 'POST',
+			path: '/save_fast_order_infos',
+			handler: function(request, reply){
+				var person_id = request.payload.person_id;
+				var send_seller = request.payload.send_seller;
+				var address = request.payload.address;
+				var number = request.payload.num;
+				var product_id = request.payload.product_id;
+				if (!person_id || !number || !product_id) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				get_productById(product_id,function(err,content){
+					if (!err) {
+						var product = content.row;
+						var origin = "ec_mp";
+						var products_price = product.product_sale_price*parseInt(number);
+						var gain_point = products_price;
+						var total_number = number;
+						var weight = product.weight*parseInt(number);
+						var order_status = -1;
+						var info = {
+							"type" : JSON.parse(address).type,
+							"store_id" : JSON.parse(address).store_id,
+							"point_id" : JSON.parse(address).point_id,
+							"weight" : weight,
+							"order_amount" : total_number,
+							"end_province" :JSON.parse(address).province,
+							"end_city" : JSON.parse(address).city,
+							"end_district" : JSON.parse(address).district
+						};
+						logistics_payment(info,function(err,result){
+							if (!err) {
+								var amount = result.row.user_amount;
+								var actual_price = gain_point + amount;
+								generate_order_no(function(err,row){
+									if (!err) {
+										order_id = row.order_no;
+										server.plugins['models'].products_ec_orders.save_order_infos(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,send_seller,address,function(err,results){
+											if (!err){
+												var product_id = product.id;
+												var order_index = 1;
+												var price = product.product_sale_price;
+												var marketing_price = product.product_marketing_price;
+												var total_price = price * number;
+												server.plugins['models'].products_ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,function(err,results){
+													if (!err){
+														return reply({"success":true,"message":"ok","service_info":service_info});
+													}else {
+														return reply({"success":false,"message":results.message,"service_info":service_info});
+													}
+												});
+											}else {
+												return reply({"success":false,"message":results.message,"service_info":service_info});
+											}
+										});
+									}else {
+										return reply({"success":false,"message":row.message,"service_info":service_info});
+									}
+								});
+							}else {
+								return reply({"success":false,"message":result.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":content.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 		// 订单明细
 		{
 			method: 'GET',
