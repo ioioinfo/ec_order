@@ -81,8 +81,14 @@ exports.register = function(server, options, next){
 		do_get_method(url,cb);
 	};
 	//得到所有订单信息
-	var get_all_orders = function(cb){
-		server.plugins['models'].orders.get_all_orders(function(err,results){
+	var get_all_orders = function(params,cb){
+		server.plugins['models'].orders.get_all_orders(params,function(err,results){
+			cb(err,results);
+		});
+	};
+	//
+	var get_all_num = function(params,cb){
+		server.plugins['models'].orders.get_all_num(params,function(err,results){
 			cb(err,results);
 		});
 	};
@@ -501,20 +507,52 @@ exports.register = function(server, options, next){
 			method: 'GET',
 			path: '/get_all_orders',
 			handler: function(request, reply){
-				get_all_orders(function(err, results){
+				var params = request.query.params;
+				if (!params) {
+					return reply({"success":false,"message":"params null","service_info":service_info});
+				}
+				params = JSON.parse(params);
+				get_all_orders(params,function(err, results){
 					if (!err) {
 						console.log("results:"+JSON.stringify(results));
 						if (results.length > 0) {
 							return reply({"success":true,"message":"ok","rows":results,"service_info":service_info});
 						}else {
-
+							return reply({"success":false,"message":results.messsage,"service_info":service_info});
 						}
 					}else {
-
+						return reply({"success":false,"message":results.messsage,"service_info":service_info});
 					}
 				});
 			}
 		},
+		//查询所有数量
+		{
+			method: 'GET',
+			path: '/get_all_num',
+			handler: function(request, reply){
+				var params = request.query.params;
+				// if (!params) {
+				// 	return reply({"success":false,"message":"params null","service_info":service_info});
+				// }
+				// params = JSON.parse(params);
+				get_all_num(params,function(err, results){
+					if (!err) {
+						console.log("results:"+JSON.stringify(results));
+						if (results.length > 0) {
+							return reply({"success":true,"message":"ok","num":results[0].num,"service_info":service_info});
+						}else {
+							return reply({"success":false,"message":results.messsage,"service_info":service_info});
+						}
+					}else {
+						return reply({"success":false,"message":results.messsage,"service_info":service_info});
+					}
+				});
+			}
+		},
+
+
+
 		//根据日期得到所有订单
 		{
 			method: 'GET',

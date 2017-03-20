@@ -63,9 +63,33 @@ var orders = function(server) {
 			});
 		},
 		//获取所有订单信息
-		get_all_orders :  function(cb){
+		get_all_orders :  function(params,cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,
 			actual_price,order_date,DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text,order_status,store_id,pos_id from orders where flag =0`;
+			if (params.thisPage) {
+				var offset = params.thisPage-1;
+				if (params.everyNum) {
+					query = query + " limit " + offset*params.everyNum + "," + params.everyNum;
+				}else {
+					query = query + " limit " + offset*20 + ",20";
+				}
+			}
+
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,results);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
+		//根据条件查询总数量
+		get_all_num :  function(params,cb){
+			var query = `select count(*) num from orders where flag =0`;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, function(err, results) {
 					connection.release();

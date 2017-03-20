@@ -57,19 +57,19 @@ exports.register = function(server, options, next){
 	};
 	//查询ec所有订单
 	var get_ec_orders = function(person_id,cb){
-		server.plugins['models'].products_ec_orders.get_ec_orders(person_id,function(err,results){
+		server.plugins['models'].ec_orders.get_ec_orders(person_id,function(err,results){
 			cb(err,results);
 		});
 	};
 	//查询ec  单条order信息
 	var get_ec_order = function(order_id,cb){
-		server.plugins['models'].products_ec_orders.get_ec_order(order_id,function(err,results){
+		server.plugins['models'].ec_orders.get_ec_order(order_id,function(err,results){
 			cb(err,results);
 		});
 	};
 	//查询ec所有明细
 	var get_ec_all_details = function(order_ids,cb){
-		server.plugins['models'].products_ec_orders_details.search_ec_order_details(order_ids,function(err,results){
+		server.plugins['models'].ec_orders_details.search_ec_order_details(order_ids,function(err,results){
 			cb(err,results);
 		});
 	};
@@ -102,7 +102,7 @@ exports.register = function(server, options, next){
 	};
 	//更新订单状态
 	var update_order_status = function(order_id,order_status,cb){
-		server.plugins['models'].products_ec_orders.update_order_status(order_id,order_status,function(err,results){
+		server.plugins['models'].ec_orders.update_order_status(order_id,order_status,function(err,results){
 			cb(err,results);
 		});
 	};
@@ -184,14 +184,14 @@ exports.register = function(server, options, next){
 								generate_order_no(function(err,row){
 									if (!err) {
 										order_id = row.order_no;
-										server.plugins['models'].products_ec_orders.save_order_infos(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,send_seller,address,function(err,results){
+										server.plugins['models'].ec_orders.save_order_infos(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,send_seller,address,function(err,results){
 											if (!err){
 												var product_id = product.id;
 												var order_index = 1;
 												var price = product.product_sale_price;
 												var marketing_price = product.product_marketing_price;
 												var total_price = price * number;
-												server.plugins['models'].products_ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,function(err,results){
+												server.plugins['models'].ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,function(err,results){
 													if (!err){
 														return reply({"success":true,"message":"ok","service_info":service_info});
 													}else {
@@ -264,7 +264,7 @@ exports.register = function(server, options, next){
 				if (!order_id) {
 					return reply({"success":false,"message":"params null","service_info":service_info});
 				}
-				server.plugins['models'].products_ec_orders.get_order(order_id,function(err,result){
+				server.plugins['models'].ec_orders.get_order(order_id,function(err,result){
 					if (!err) {
 						console.log(JSON.stringify(result));
 						if (result.length >0) {
@@ -283,7 +283,7 @@ exports.register = function(server, options, next){
 			method: 'GET',
 			path: '/mp_orders_list',
 			handler: function(request, reply){
-				server.plugins['models'].products_ec_orders.mp_orders_list(function(err,results){
+				server.plugins['models'].ec_orders.mp_orders_list(function(err,results){
 					if (!err) {
 						return reply({"success":true,"message":"ok","orders":results,"service_info":service_info});
 					}else {
@@ -614,7 +614,7 @@ exports.register = function(server, options, next){
 									console.log("generate_order_no:"+JSON.stringify(row));
 									if (!err) {
 										order_id = row.order_no;
-										server.plugins['models'].products_ec_orders.save_order_infos(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,send_seller,address,function(err,results){
+										server.plugins['models'].ec_orders.save_order_infos(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,send_seller,address,function(err,results){
 											if (!err){
 												for (var i = 0; i < shopping_carts.length; i++) {
 													var product_id = shopping_carts[i].product_id;
@@ -623,7 +623,7 @@ exports.register = function(server, options, next){
 													var price = products[shopping_carts[i].product_id].product_sale_price;
 													var marketing_price = products[shopping_carts[i].product_id].product_marketing_price;
 													var total_price = price * number;
-													server.plugins['models'].products_ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,function(err,results){
+													server.plugins['models'].ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,function(err,results){
 														if (!err){
 														}else {
 															return reply({"success":false,"message":results.message,"service_info":service_info});
