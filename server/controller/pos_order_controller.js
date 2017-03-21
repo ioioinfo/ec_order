@@ -556,6 +556,24 @@ exports.register = function(server, options, next){
 		//根据日期得到所有订单
 		{
 			method: 'GET',
+			path: '/get_front_orders',
+			handler: function(request, reply){
+				var person_id = request.query.person_id;
+				if (!person_id) {
+					return reply({"success":false,"message":"params null","service_info":service_info});
+				}
+				server.plugins['models'].orders.get_front_orders(person_id,function(err,rows){
+					if (!err) {
+						return reply({"success":true,"message":"ok","rows":rows,"service_info":service_info});
+					}else {
+						return reply({"success":false,"message":"error","service_info":service_info});
+					}
+				});
+			}
+		},
+		//查询所有订单
+		{
+			method: 'GET',
 			path: '/get_orders_byDate',
 			handler: function(request, reply){
 				var date1 = request.query.date1;
@@ -572,7 +590,7 @@ exports.register = function(server, options, next){
 							return reply({"success":true,"message":"ok","rows":null,"service_info":service_info});
 						}
 					}else {
-
+						return reply({"success":false,"message":"error","service_info":service_info});
 					}
 				});
 			}

@@ -136,7 +136,28 @@ var orders = function(server) {
 				});
 			});
 		},
+		//获取所有订单信息
+		get_front_orders :  function(person_id,cb){
+			var query = `select order_id,person_id,
+			actual_price,DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text,store_id
+			from orders where flag =0
+			and
+			person_id = ?
+			and order_status = "4"
+			`;
 
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, [person_id],function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,results);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 
 	};
 };
