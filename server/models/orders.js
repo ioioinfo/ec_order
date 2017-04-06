@@ -77,7 +77,7 @@ var orders = function(server) {
 				var order_id = params.order_id;
 				query = query + " and order_id='"+ order_id +"'";
 			}
-			
+
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, function(err, results) {
 					connection.release();

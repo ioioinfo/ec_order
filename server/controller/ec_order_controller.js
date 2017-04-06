@@ -125,11 +125,11 @@ exports.register = function(server, options, next){
 		do_get_method(url,cb);
 	};
 	//生成pos单号
-	var generate_order_no = function(cb){
+	var generate_order_no = function(order_type,cb){
 		var url = "http://211.149.248.241:18011/generate_order_no"
 		var data = {
 			org_code : "ioio",
-			order_type : "ec_order"
+			order_type : order_type
 		};
 		do_post_method(url,data,cb);
 	};
@@ -145,6 +145,85 @@ exports.register = function(server, options, next){
 		do_get_method(url,cb);
 	};
 	server.route([
+		//保存事件
+		{
+			method: 'POST',
+			path: '/save_event',
+			handler: function(request, reply){
+				var id = request.payload.id;
+				var is_deal = request.payload.is_deal;
+				server.plugins['models'].event_solution.save_event(id,is_deal,function(err,row){
+					if (row.affectedRows>0) {
+						return reply({"success":true,"message":"ok","service_info":service_info});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+		//查询事件是否处理
+		{
+			method: 'POST',
+			path: '/search_deal_event',
+			handler: function(request, reply){
+				var id = request.payload.id;
+				server.plugins['models'].event_solution.search_deal_event(id,function(err,row){
+					if (!err) {
+						return reply({"success":true,"row":row,"service_info":service_info});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+		//更新订单状态
+		{
+			method: 'POST',
+			path: '/update_order_status_pay',
+			handler: function(request, reply){
+				var order_id = request.payload.order_id;
+				var order_status = request.payload.order_status;
+				server.plugins['models'].ec_orders.update_order_status(order_id,order_status,function(err,results){
+					if (!err) {
+						return reply({"success":true,"message":"ok","service_info":service_info});
+					}else {
+						return reply({"success":false,"message":results.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+
+		//保存充值订单
+		{
+			method: 'POST',
+			path: '/save_recharge_order',
+			handler: function(request, reply){
+				var marketing_price = request.payload.marketing_price;
+				var actual_price = request.payload.actual_price;
+				var activity_id = request.payload.activity_id;
+				var person_id = request.payload.person_id;
+				var pay_way = request.payload.pay_way;
+				if (!person_id||!pay_way||!activity_id||!actual_price||!marketing_price) {
+					return reply({"success":false,"message":"params null","service_info":service_info});
+				}
+				generate_order_no("recharge_order",function(err,row){
+					if (!err) {
+						var order_id = row.order_no;
+						server.plugins['models'].recharge_order.save_order(order_id,activity_id,person_id,marketing_price,actual_price,pay_way,function(err,results){
+							if (!err) {
+								return reply({"success":true,"message":"ok","orders":results,"service_info":service_info});
+							}else {
+								return reply({"success":false,"message":results.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+
+			}
+		},
+
 		//保存立即购买订单
 		{
 			method: 'POST',
@@ -181,7 +260,7 @@ exports.register = function(server, options, next){
 							if (!err) {
 								var amount = result.row.user_amount;
 								var actual_price = gain_point + amount;
-								generate_order_no(function(err,row){
+								generate_order_no("ec_order",function(err,row){
 									if (!err) {
 										order_id = row.order_no;
 										server.plugins['models'].ec_orders.save_order_infos(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,send_seller,address,function(err,results){
@@ -610,7 +689,7 @@ exports.register = function(server, options, next){
 							if (!err) {
 								var amount = result.row.user_amount;
 								var actual_price = amount + products_price;
-								generate_order_no(function(err,row){
+								generate_order_no("ec_order",function(err,row){
 									console.log("generate_order_no:"+JSON.stringify(row));
 									if (!err) {
 										order_id = row.order_no;
