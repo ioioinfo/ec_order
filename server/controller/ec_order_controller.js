@@ -234,7 +234,8 @@ exports.register = function(server, options, next){
 				var address = request.payload.address;
 				var number = request.payload.num;
 				var product_id = request.payload.product_id;
-				if (!person_id || !number || !product_id) {
+				var sku_id = request.payload.sku_id;
+				if (!person_id || !number || !product_id || !sku_id) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
 				get_productById(product_id,function(err,content){
@@ -256,8 +257,10 @@ exports.register = function(server, options, next){
 							"end_city" : JSON.parse(address).city,
 							"end_district" : JSON.parse(address).district
 						};
+						console.log("info:"+JSON.stringify(info));
 						logistics_payment(info,function(err,result){
 							if (!err) {
+								console.log("result:"+JSON.stringify(result));
 								var amount = result.row.user_amount;
 								var actual_price = gain_point + amount;
 								generate_order_no("ec_order",function(err,row){
@@ -270,7 +273,7 @@ exports.register = function(server, options, next){
 												var price = product.product_sale_price;
 												var marketing_price = product.product_marketing_price;
 												var total_price = price * number;
-												server.plugins['models'].ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,function(err,results){
+												server.plugins['models'].ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,sku_id,function(err,results){
 													if (!err){
 														return reply({"success":true,"message":"ok","service_info":service_info});
 													}else {
@@ -702,7 +705,8 @@ exports.register = function(server, options, next){
 													var price = products[shopping_carts[i].product_id].product_sale_price;
 													var marketing_price = products[shopping_carts[i].product_id].product_marketing_price;
 													var total_price = price * number;
-													server.plugins['models'].ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,function(err,results){
+													var sku_id = shopping_carts[i].sku_id;
+													server.plugins['models'].ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,sku_id,function(err,results){
 														if (!err){
 														}else {
 															return reply({"success":false,"message":results.message,"service_info":service_info});

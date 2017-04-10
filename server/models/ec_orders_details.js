@@ -20,12 +20,12 @@ var ec_orders_details = function(server) {
 			});
 		},
 		//保存订单详细
-		save_ec_order_details: function(order_id,product_id,order_index,number,price,marketing_price,total_price,cb) {
+		save_ec_order_details: function(order_id,product_id,order_index,number,price,marketing_price,total_price,sku_id,cb) {
 			var query = `insert into ec_orders_details(id, order_id, product_id, order_index,
-				number, price, marketing_price, total_price, created_at, updated_at,
-				flag) values (uuid(), ?, ?, ?, ?, ?, ?, ?, now(), now(), 0)` ;
+				number, price, marketing_price, total_price,sku_id, created_at, updated_at,
+				flag) values (uuid(), ?, ?, ?, ?, ?, ?, ?, ?,now(), now(), 0)` ;
 			console.log(query);
-			var columns=[order_id,product_id,order_index,number,price,marketing_price,total_price];
+			var columns=[order_id,product_id,order_index,number,price,marketing_price,total_price,sku_id];
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {
 					connection.release();
