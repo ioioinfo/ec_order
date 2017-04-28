@@ -30,7 +30,8 @@ var ec_orders = function(server) {
 			var query = `select order_id,person_id,gain_point,card_reduce,
 				total_number,logistics_price,actual_price,send_seller,weight,
 				linkname,detail_address,mobile,province,city,district,cancel_reason,
-				products_price,order_date,order_status,store_id,pay_way,created_at
+				products_price,order_date,order_status,store_id,pay_way,created_at,
+				DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S') order_date_text
 				from ec_orders
 				where flag =0
 			`;
@@ -46,6 +47,27 @@ var ec_orders = function(server) {
 				});
 			});
 		},
+
+		//订单数量
+		mp_orders_count : function(cb){
+			var query = `select count(1) num
+				from ec_orders
+				where flag =0
+			`;
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,null);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
+
+
 		//获取一个人所有订单信息
 		get_ec_orders :  function(person_id,cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,

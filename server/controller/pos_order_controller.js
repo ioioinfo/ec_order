@@ -3,6 +3,7 @@ const uu_request = require('../utils/uu_request');
 const uuidV1 = require('uuid/v1');
 var eventproxy = require('eventproxy');
 var service_info = "ec order service"
+
 var do_get_method = function(url,cb){
 	uu_request.get(url, function(err, response, body){
 		if (!err && response.statusCode === 200) {
