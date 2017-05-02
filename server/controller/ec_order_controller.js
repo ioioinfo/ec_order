@@ -33,7 +33,6 @@ var do_get_method = function(url,cb){
 //所有post调用接口方法
 var do_post_method = function(url,data,cb){
 	uu_request.request(url, data, function(err, response, body) {
-		console.log(body);
 		if (!err && response.statusCode === 200) {
 			do_result(false, body, cb);
 		} else {
@@ -185,7 +184,6 @@ exports.register = function(server, options, next){
 							results[i].order_status = order_status[results[i].order_status];
 						}
 						get_ec_all_details(order_ids,function(error,content){
-							console.log(content);
 							if (!error) {
 								var order_map = {};
 								var product_ids = [];
@@ -207,11 +205,8 @@ exports.register = function(server, options, next){
 										order_map[order_detail.order_id] = order_details;
 									}
 								}
-								console.log("order_map:"+JSON.stringify(order_map));
 								product_ids = JSON.stringify(product_ids);
-								console.log("product_ids:"+product_ids);
 								find_products_with_picture(product_ids,function(err, rows){
-									console.log("row:"+JSON.stringify(rows));
 									if (!err) {
 										var products = rows.products;
 										var products_map = {};
@@ -221,7 +216,6 @@ exports.register = function(server, options, next){
 										}
 										return reply({"success":true,"message":"ok","orders":results,"details":order_map,"products":products_map,"service_info":service_info});
 									}else {
-										console.log("err:"+err);
 										return reply({"success":false,"message":rows.message,"service_info":service_info});
 									}
 								});
@@ -367,10 +361,8 @@ exports.register = function(server, options, next){
 							"end_city" : JSON.parse(address).city,
 							"end_district" : JSON.parse(address).district
 						};
-						console.log("info:"+JSON.stringify(info));
 						logistics_payment(info,function(err,result){
 							if (!err) {
-								console.log("result:"+JSON.stringify(result));
 								var amount = result.row.user_amount;
 								var actual_price = gain_point + amount;
 								generate_order_no("ec_order",function(err,row){
@@ -458,7 +450,6 @@ exports.register = function(server, options, next){
 				}
 				server.plugins['models'].ec_orders.get_order(order_id,function(err,result){
 					if (!err) {
-						console.log(JSON.stringify(result));
 						if (result.length >0) {
 							return reply({"success":true,"message":"ok","order":result,"service_info":service_info});
 						}else {
@@ -521,7 +512,6 @@ exports.register = function(server, options, next){
 							results[i].order_status = order_status[results[i].order_status];
 						}
 						get_ec_all_details(order_ids,function(error,content){
-							console.log(content);
 							if (!error) {
 								var order_map = {};
 								var product_ids = [];
@@ -543,11 +533,8 @@ exports.register = function(server, options, next){
 										order_map[order_detail.order_id] = order_details;
 									}
 								}
-								console.log("order_map:"+JSON.stringify(order_map));
 								product_ids = JSON.stringify(product_ids);
-								console.log("product_ids:"+product_ids);
 								find_products_with_picture(product_ids,function(err, rows){
-									console.log("row:"+JSON.stringify(rows));
 									if (!err) {
 										var products = rows.products;
 										var products_map = {};
@@ -557,7 +544,6 @@ exports.register = function(server, options, next){
 										}
 										return reply({"success":true,"message":"ok","orders":results,"details":order_map,"products":products_map,"service_info":service_info});
 									}else {
-										console.log("err:"+err);
 										return reply({"success":false,"message":rows.message,"service_info":service_info});
 									}
 								});
@@ -588,7 +574,6 @@ exports.register = function(server, options, next){
 							results[i].order_status = order_status[results[i].order_status];
 						}
 						get_ec_all_details(order_ids,function(error,content){
-							console.log(content);
 							if (!error) {
 								var order_map = {};
 								var product_ids = [];
@@ -610,10 +595,8 @@ exports.register = function(server, options, next){
 										order_map[order_detail.order_id] = order_details;
 									}
 								}
-								console.log("order_map:"+JSON.stringify(order_map));
 								product_ids = JSON.stringify(product_ids);
 								find_products_with_picture(product_ids,function(errs, rows){
-									console.log("row:"+JSON.stringify(rows));
 									if (!errs) {
 										var products = rows.products;
 										var products_map = {};
@@ -623,7 +606,6 @@ exports.register = function(server, options, next){
 										}
 										return reply({"success":true,"message":"ok","orders":results,"details":order_map,"products":products_map,"service_info":service_info});
 									}else {
-										console.log("err:"+errs);
 										return reply({"success":false,"message":rows.message,"service_info":service_info});
 									}
 								});
@@ -694,7 +676,6 @@ exports.register = function(server, options, next){
 				}
 				search_logistics_id(order_id,function(err,results){
 					if (!err) {
-						console.log("result:"+JSON.stringify(results));
 						if (results.length ==0) {
 							return reply({"success":false,"message":"no data","service_info":service_info})
 						}
@@ -742,7 +723,6 @@ exports.register = function(server, options, next){
 				var order_id = JSON.parse(request.query.order_id);
 				var person_id = request.query.person_id;
 				search_ec_invoices(person_id,order_id,function(err,result){
-					console.log("result:"+JSON.stringify(result));
 					if (!err) {
 						return reply({"success":true,"rows":result,"service_info":service_info});
 					}else {
@@ -780,7 +760,6 @@ exports.register = function(server, options, next){
 						data_base_carts = results.shopping_carts;
 						data_base_products = results.products;
 						data_base_total_data = results.total_data;
-						console.log("data_base_carts:"+data_base_carts);
 						//和页面传的购物车里信息核实
 						for (var i = 0; i < shopping_carts.length; i++) {
 							var per_price = shopping_carts[i].per_price;
@@ -821,7 +800,6 @@ exports.register = function(server, options, next){
 								var amount = result.row.user_amount;
 								var actual_price = amount + products_price;
 								generate_order_no("ec_order",function(err,row){
-									console.log("generate_order_no:"+JSON.stringify(row));
 									if (!err) {
 										order_id = row.order_no;
 										server.plugins['models'].ec_orders.save_order_infos(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,send_seller,address,function(err,results){

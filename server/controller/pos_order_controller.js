@@ -17,7 +17,6 @@ var do_get_method = function(url,cb){
 
 var do_post_method = function(data,url,cb){
 	uu_request.request(url, data, function(err, response, body) {
-		console.log(body);
 		if (!err && response.statusCode === 200) {
 			cb(false,body);
 		} else {
@@ -130,7 +129,6 @@ exports.register = function(server, options, next){
 					if (!err) {
 						if (row.success) {
 							var pay_infos = row.rows;
-							console.log("pay_infos"+pay_infos);
 							ep.emit("pay_infos", pay_infos);
 						}else {
 							ep.emit("pay_infos", null);
@@ -225,7 +223,6 @@ exports.register = function(server, options, next){
 				var pay_way = request.payload.pay_way;
 				var store_id = request.payload.store_id;
 				var small_change = request.payload.small_change;
-				console.log("store_id: "+store_id);
 				products = JSON.parse(products);
 				var order_id;
 				if (!actual_price || !marketing_price || !pos_id || !operation_system || !origin || !products || !store_id || !small_change) {
@@ -297,7 +294,6 @@ exports.register = function(server, options, next){
 						return reply({"success":true,"order":order,"order_details":order_details,"service_info":service_info});
 				});
 				search_order(order_id,function(err, row){
-					console.log("order:"+JSON.stringify(row));
 					if (!err) {
 						if (row.length >0) {
 							var order = row[0];
@@ -310,7 +306,6 @@ exports.register = function(server, options, next){
 					}
 				});
 				search_order_details(order_id,function(err, rows){
-					console.log("order_details:"+JSON.stringify(rows));
 					if (!err) {
 						if (rows.length >0) {
 							var order_details = rows;
@@ -492,7 +487,6 @@ exports.register = function(server, options, next){
 					if (!err) {
 						if (row.success) {
 							var pay_infos = row.rows;
-							console.log("pay_infos"+pay_infos);
 							ep.emit("pay_infos", pay_infos);
 						}else {
 							ep.emit("pay_infos", null);
@@ -515,7 +509,6 @@ exports.register = function(server, options, next){
 				params = JSON.parse(params);
 				get_all_orders(params,function(err, results){
 					if (!err) {
-						console.log("results:"+JSON.stringify(results));
 						if (results.length > 0) {
 							return reply({"success":true,"message":"ok","rows":results,"service_info":service_info});
 						}else {
@@ -539,7 +532,6 @@ exports.register = function(server, options, next){
 				// params = JSON.parse(params);
 				get_all_num(params,function(err, results){
 					if (!err) {
-						console.log("results:"+JSON.stringify(results));
 						if (results.length > 0) {
 							return reply({"success":true,"message":"ok","num":results[0].num,"service_info":service_info});
 						}else {
@@ -584,7 +576,6 @@ exports.register = function(server, options, next){
 				}
 				get_orders_byDate(date1,date2,function(err, results){
 					if (!err) {
-						console.log("results:"+JSON.stringify(results));
 						if (results.length > 0) {
 							return reply({"success":true,"message":"ok","rows":results,"service_info":service_info});
 						}else {
@@ -609,7 +600,6 @@ exports.register = function(server, options, next){
 				}
 				get_member_orders(person_id,date1,date2,function(err, results){
 					if (!err) {
-						console.log("results:"+JSON.stringify(results));
 						if (results.length > 0) {
 							for (var i = 0; i < results.length; i++) {
 								var order_id = results[i].order_id;
