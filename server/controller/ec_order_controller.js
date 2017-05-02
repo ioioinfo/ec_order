@@ -8,12 +8,16 @@ var order_status = {
 	"0" : "付款确认中",
 	"1" : "买家已付款",
 	"2" : "等待卖家发货",
-	"3" : "卖家已发货",
-	"4" : "等待买家收货",
-	"5" : "交易成功",
-	"6" : "交易关闭",
-	"7" : "退款中订单",
-	"8" : "等待买家评价"
+	"3" : "等待快递员揽货",
+	"4" : "卖家已发货",
+	"5" : "等待买家收货",
+	"6" : "交易成功",
+	"7" : "交易关闭",
+	"8" : "订单取消审核中",
+	"9" : "订单退款中",
+	"10" : "退款成功",
+	"11" : "退款失败",
+	"12" : "等待买家评价"
 };
 
 var do_get_method = function(url,cb){
@@ -145,6 +149,97 @@ exports.register = function(server, options, next){
 		do_get_method(url,cb);
 	};
 	server.route([
+		//查询订单
+		{
+			method: 'GET',
+			path: '/search_order_byStatus',
+			handler: function(request, reply){
+				var order_status = request.query.status;
+				var person_id = request.query.person_id;
+				if (!order_status || !person_id) {
+					return reply({"success":false,"message":"params null","service_info":service_info});
+				}
+				server.plugins['models'].ec_orders.search_order_byStatus(person_id,order_status,function(err,results){
+					if (!err) {
+						if (!results || results.length == 0) {
+							return reply({"success":true,"message":"ok","orders":results,"details":{},"products":{},"service_info":service_info});
+						}
+						var order_ids = [];
+						for (var i = 0; i < results.length; i++) {
+							order_ids.push(results[i].order_id);
+							results[i].order_status = order_status[results[i].order_status];
+						}
+						get_ec_all_details(order_ids,function(error,content){
+							console.log(content);
+							if (!error) {
+								var order_map = {};
+								var product_ids = [];
+								for (var i = 0; i < content.length; i++) {
+									var order_detail = content[i];
+									product_ids.push(order_detail.product_id);
+
+									//判断order_map是否有order_id
+									if (order_map[order_detail.order_id]) {
+										//2.有的话 order_map放入 details 里面
+										var order_details = order_map[order_detail.order_id];
+										//传址！
+										order_details.push(order_detail);
+									} else {
+										// 1.没有的话
+										var order_details = [];
+										order_details.push(order_detail);
+										//order_id 对应 明细
+										order_map[order_detail.order_id] = order_details;
+									}
+								}
+								console.log("order_map:"+JSON.stringify(order_map));
+								product_ids = JSON.stringify(product_ids);
+								console.log("product_ids:"+product_ids);
+								find_products_with_picture(product_ids,function(err, rows){
+									console.log("row:"+JSON.stringify(rows));
+									if (!err) {
+										var products = rows.products;
+										var products_map = {};
+										for (var i = 0; i < products.length; i++) {
+											var product = products[i];
+											products_map[product.id] = product;
+										}
+										return reply({"success":true,"message":"ok","orders":results,"details":order_map,"products":products_map,"service_info":service_info});
+									}else {
+										console.log("err:"+err);
+										return reply({"success":false,"message":rows.message,"service_info":service_info});
+									}
+								});
+							}else {
+								return reply({"success":false,"message":content.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":results.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+		//取消订单
+		{
+			method: 'POST',
+			path: '/order_cancel',
+			handler: function(request, reply){
+				var order_id = request.payload.order_id;
+				var reason = request.payload.reason;
+				var order_status = request.payload.status;
+				if (!order_id||!order_status||!reason) {
+					return reply({"success":false,"message":"params null","service_info":service_info});
+				}
+				server.plugins['models'].ec_orders.order_cancel(order_id,reason,order_status,function(err,row){
+					if (row.affectedRows>0) {
+						return reply({"success":true,"service_info":service_info});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 		//保存事件
 		{
 			method: 'POST',

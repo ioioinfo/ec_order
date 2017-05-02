@@ -106,11 +106,42 @@ var ec_orders = function(server) {
 				});
 			});
 		},
+		//查询订单状态
+		search_order_byStatus : function(person_id,order_status,cb){
+			var query = `select order_id,person_id,gain_point,card_reduce,mobile,
+			total_number,logistics_price,actual_price,linkname,detail_address,send_seller,
+			products_price,order_date,order_status,store_id,pay_way,created_at
+			from ec_orders where person_id = ? and flag = 0 and order_status = ?` ;
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query,[person_id,order_status], function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,results);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 		//更新订单状态
 		update_order_status : function(order_id,order_status,cb){
 			var query = `update ec_orders set order_status = ?
 			where order_id = ? and flag =0`;
 			server.plugins['mysql'].query(query,[order_status,order_id], function(err, results) {
+				if (err) {
+					console.log(err);
+					cb(true,results);
+					return;
+				}
+				cb(false,results);
+			});
+		},
+		//更新订单状态
+		order_cancel : function(order_id,cancel_reason,order_status,cb){
+			var query = `update ec_orders set order_status = ?, cancel_reason = ?
+			where order_id = ? and flag =0`;
+			server.plugins['mysql'].query(query,[order_status,cancel_reason,order_id], function(err, results) {
 				if (err) {
 					console.log(err);
 					cb(true,results);
