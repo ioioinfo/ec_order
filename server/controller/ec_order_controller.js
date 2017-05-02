@@ -569,6 +569,9 @@ exports.register = function(server, options, next){
 				get_ec_order(order_id,function(err, results){
 					if (!err) {
 						var order_ids = [];
+						if (results.length ==0) {
+							return reply({"success":false,"message":"no data for this order_ids","service_info":service_info});
+						}
 						for (var i = 0; i < results.length; i++) {
 							order_ids.push(results[i].order_id);
 							results[i].order_status = order_status[results[i].order_status];
