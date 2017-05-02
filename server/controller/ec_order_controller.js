@@ -149,6 +149,21 @@ exports.register = function(server, options, next){
 		do_get_method(url,cb);
 	};
 	server.route([
+		//删除订单
+		{
+			method: 'POST',
+			path: '/order_delete',
+			handler: function(request, reply){
+				var order_id = request.payload.order_id;
+				server.plugins['models'].ec_orders.order_delete(order_id,function(err,row){
+					if (row.affectedRows>0) {
+						return reply({"success":true,"message":"ok","service_info":service_info});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 		//查询订单
 		{
 			method: 'GET',
@@ -679,6 +694,7 @@ exports.register = function(server, options, next){
 				}
 				search_logistics_id(order_id,function(err,results){
 					if (!err) {
+						console.log("result:"+JSON.stringify(results));
 						if (results.length ==0) {
 							return reply({"success":false,"message":"no data","service_info":service_info})
 						}

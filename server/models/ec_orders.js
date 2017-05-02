@@ -191,7 +191,19 @@ var ec_orders = function(server) {
 				});
 			});
 		},
-
+		//删除订单
+		order_delete : function(order_id,cb){
+			var query = `update ec_orders set flag = 1
+			where order_id = ? and flag =0`;
+			server.plugins['mysql'].query(query,[order_id], function(err, results) {
+				if (err) {
+					console.log(err);
+					cb(true,results);
+					return;
+				}
+				cb(false,results);
+			});
+		},
 
 
 	};
