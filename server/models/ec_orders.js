@@ -26,7 +26,7 @@ var ec_orders = function(server) {
 		},
 
 		//订单列表
-		mp_orders_list : function(cb){
+		mp_orders_list : function(params,cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,
 				total_number,logistics_price,actual_price,send_seller,weight,
 				linkname,detail_address,mobile,province,city,district,cancel_reason,
@@ -35,6 +35,14 @@ var ec_orders = function(server) {
 				from ec_orders
 				where flag =0
 			`;
+			if (params.thisPage) {
+				var offset = params.thisPage-1;
+				if (params.everyNum) {
+					query = query + " limit " + offset*params.everyNum + "," + params.everyNum;
+				}else {
+					query = query + " limit " + offset*20 + ",20";
+				}
+			}
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, function(err, results) {
 					connection.release();

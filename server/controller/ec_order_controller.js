@@ -460,7 +460,12 @@ exports.register = function(server, options, next){
 			method: 'GET',
 			path: '/mp_orders_list',
 			handler: function(request, reply){
-				server.plugins['models'].ec_orders.mp_orders_list(function(err,results){
+				var params = request.query.params;
+				if (!params) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				params = JSON.parse(params);
+				server.plugins['models'].ec_orders.mp_orders_list(params,function(err,results){
 					if (!err) {
 						var orders = results;
 						if (orders.length>0) {
