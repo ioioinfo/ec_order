@@ -99,8 +99,8 @@ var ec_orders = function(server) {
 		//获取一个人单条订单信息
 		get_ec_order :  function(order_id,cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,mobile,
-			total_number,logistics_price,actual_price,linkname,detail_address,send_seller,
-			products_price,order_date,order_status,store_id,pay_way,created_at
+			total_number,logistics_price,actual_price,linkname,detail_address,send_seller,district,
+			products_price,order_date,order_status,store_id,pay_way,created_at,province,city
 			from ec_orders where order_id=? and flag =0`;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query,[order_id], function(err, results) {
