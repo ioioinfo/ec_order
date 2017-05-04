@@ -6,7 +6,7 @@ var service_info = "ec order service";
 var order_status = {
 	"-1": "等待买家付款",
 	"0" : "付款确认中",
-	"1" : "买家已付款",
+	"1" : "等待卖家拣货",
 	"2" : "等待卖家发货",
 	"3" : "等待快递员揽货",
 	"4" : "卖家已发货",
@@ -451,7 +451,7 @@ exports.register = function(server, options, next){
 				server.plugins['models'].ec_orders.get_order(order_id,function(err,result){
 					if (!err) {
 						if (result.length >0) {
-							return reply({"success":true,"message":"ok","order":result,"service_info":service_info});
+							return reply({"success":true,"message":"ok","rows":result,"service_info":service_info});
 						}else {
 							return reply({"success":false,"message":"没有找到订单","service_info":service_info});
 						}

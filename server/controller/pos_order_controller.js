@@ -27,8 +27,8 @@ var do_post_method = function(data,url,cb){
 
 exports.register = function(server, options, next){
 	//pos端
-	var save_order = function(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,cb){
-		server.plugins['models'].orders.save_orders(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err,results){
+	var save_order = function(order_id,person_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,cb){
+		server.plugins['models'].orders.save_orders(order_id,person_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err,results){
 			cb(err,results);
 		});
 	};
@@ -112,6 +112,46 @@ exports.register = function(server, options, next){
 		};
 	server.route([
 		//pos端
+
+		//充值订单查询
+		{
+			method: 'GET',
+			path: '/get_recharge_order',
+			handler: function(request, reply){
+				var order_id = request.query.order_id;
+				if (!order_id) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				server.plugins['models'].recharge_order.get_order(order_id,function(err,results){
+					if (!err) {
+						return reply({"success":true,"rows":results,"service_info":service_info});
+					}else {
+						return reply({"success":false,"message":results.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+
+		//更新充值订单状态
+		{
+			method: 'POST',
+			path: '/update_recharge_status',
+			handler: function(request, reply){
+				var order_id = request.payload.order_id;
+				var order_status = request.payload.order_status;
+				if (!order_id || !order_status) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				server.plugins['models'].recharge_order.update_order_status(order_id,order_status,function(err,results){
+					if (!err) {
+						return reply({"success":true,"message":"ok","service_info":service_info});
+					}else {
+						return reply({"success":false,"message":results.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+
 		//单条信息的支付，产品，等详情
 		{
 			method: 'GET',
@@ -223,6 +263,7 @@ exports.register = function(server, options, next){
 				var pay_way = request.payload.pay_way;
 				var store_id = request.payload.store_id;
 				var small_change = request.payload.small_change;
+				var person_id = request.payload.person_id;
 				products = JSON.parse(products);
 				var order_id;
 				if (!actual_price || !marketing_price || !pos_id || !operation_system || !origin || !products || !store_id || !small_change) {
@@ -232,7 +273,7 @@ exports.register = function(server, options, next){
 					if (!err) {
 						if (row.success) {
 							order_id = row.order_no;
-							save_order(order_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err, results){
+							save_order(order_id,person_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err, results){
 								if (results.affectedRows>0) {
 									for (var i = 0; i < products.length; i++) {
 										var product = products[i];

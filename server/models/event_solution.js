@@ -36,6 +36,20 @@ var event_solution = function(server) {
 				});
 			});
 		},
+		//更新订单状态
+		update_event_status : function(id,is_deal,cb){
+			var query = `update ec_orders set is_deal = ?
+			where event_id = ? and flag =0`;
+			server.plugins['mysql'].query(query,[is_deal,id], function(err, results) {
+				if (err) {
+					console.log(err);
+					cb(true,results);
+					return;
+				}
+				cb(false,results);
+			});
+		},
+
 
 	};
 };
