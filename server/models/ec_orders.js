@@ -5,7 +5,7 @@ var ec_orders = function(server) {
 	return {
 		//单个订单查询
 		get_order : function(order_id, cb){
-			var query = `select order_id,person_id,gain_point,card_reduce,
+			var query = `select order_id,person_id,gain_point,card_reduce,type,
 				total_number,logistics_price,actual_price,send_seller,weight,
 				linkname,detail_address,mobile,province,city,district,cancel_reason,
 				products_price,order_date,order_status,store_id,pay_way,created_at
@@ -27,7 +27,7 @@ var ec_orders = function(server) {
 
 		//订单列表
 		mp_orders_list : function(params,cb){
-			var query = `select order_id,person_id,gain_point,card_reduce,
+			var query = `select order_id,person_id,gain_point,card_reduce,type,
 				total_number,logistics_price,actual_price,send_seller,weight,
 				linkname,detail_address,mobile,province,city,district,cancel_reason,
 				products_price,order_date,order_status,store_id,pay_way,created_at,
@@ -79,7 +79,7 @@ var ec_orders = function(server) {
 		//获取一个人所有订单信息
 		get_ec_orders :  function(person_id,cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,
-				total_number,logistics_price,actual_price,send_seller,
+				total_number,logistics_price,actual_price,send_seller,type,
 				products_price,order_date,order_status,store_id,pay_way,created_at
 				from ec_orders
 				where flag =0 and person_id=?
@@ -98,7 +98,7 @@ var ec_orders = function(server) {
 		},
 		//获取一个人单条订单信息
 		get_ec_order :  function(order_id,cb){
-			var query = `select order_id,person_id,gain_point,card_reduce,mobile,
+			var query = `select order_id,person_id,gain_point,card_reduce,mobile,type,
 			total_number,logistics_price,actual_price,linkname,detail_address,send_seller,district,
 			products_price,order_date,order_status,store_id,pay_way,created_at,province,city
 			from ec_orders where order_id=? and flag =0`;
@@ -116,7 +116,7 @@ var ec_orders = function(server) {
 		},
 		//查询订单状态
 		search_order_byStatus : function(person_id,order_status,cb){
-			var query = `select order_id,person_id,gain_point,card_reduce,mobile,
+			var query = `select order_id,person_id,gain_point,card_reduce,mobile,type,
 			total_number,logistics_price,actual_price,linkname,detail_address,send_seller,
 			products_price,order_date,order_status,store_id,pay_way,created_at
 			from ec_orders where person_id = ? and flag = 0 and order_status = ?` ;
@@ -167,18 +167,19 @@ var ec_orders = function(server) {
 			var province = address.province;
 			var city = address.city;
 			var district = address.district;
+			var type = address.type;
 
 			var query = `insert into ec_orders(id, order_id, person_id, gain_point,
-				linkname,detail_address,mobile,province,city,district,
+				linkname,detail_address,mobile,province,city,district,type,
 				products_price, total_number, weight, order_status, origin, logistics_price,
 				actual_price, send_seller,created_at,updated_at, flag)
 				values
 				(uuid(),?,?,?,
-				?,?,?,?,?,?,
+				?,?,?,?,?,?,?,
 				?,?,?,?,?,?,
 				?,?,now(),now(),0)` ;
 			console.log(query);
-			var columns=[order_id,person_id,gain_point,linkname,detail_address,mobile,province,city,district,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller];
+			var columns=[order_id,person_id,gain_point,linkname,detail_address,mobile,province,city,district,type,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller];
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {
 					connection.release();

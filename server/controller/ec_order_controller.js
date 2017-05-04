@@ -798,6 +798,7 @@ exports.register = function(server, options, next){
 							"end_city" : JSON.parse(address).city,
 							"end_district" : JSON.parse(address).district
 						};
+						
 						logistics_payment(info,function(err,result){
 							if (!err) {
 								var amount = result.row.user_amount;
@@ -838,7 +839,7 @@ exports.register = function(server, options, next){
 									}
 								});
 							}else {
-								return reply({"success":false,"message":results.message,"service_info":service_info});
+								return reply({"success":false,"message":result.message,"service_info":service_info});
 							}
 						});
 					}else {
