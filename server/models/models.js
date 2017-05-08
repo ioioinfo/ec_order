@@ -10,6 +10,8 @@ exports.register = function(server, options, next){
 	server.expose('normal_invoices', require('./normal_invoices.js')(server));
 	server.expose('recharge_order', require('./recharge_order.js')(server));
 	server.expose('event_solution', require('./event_solution.js')(server));
+	server.expose('return_pictures', require('./return_pictures.js')(server));
+	server.expose('return_orders_details', require('./return_orders_details.js')(server));
 	next();
 }
 

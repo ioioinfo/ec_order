@@ -75,6 +75,9 @@ server.register([
 	{
 	  register: require('./server/controller/logistics_controller.js')
 	},
+    {
+	  register: require('./server/controller/return_controller.js')
+	},
 
 ], function () {
     //Start the server
