@@ -416,7 +416,7 @@ exports.register = function(server, options, next){
 						var products_price = product.product_sale_price*parseInt(number);
 						var gain_point = products_price;
 						var total_number = number;
-						var weight = product.weight*parseInt(number);
+						var weight = (product.weight * parseInt(number)).toFixed(2);
 						var order_status = -1;
 						var info = {
 							"type" : JSON.parse(address).type,
@@ -449,7 +449,7 @@ exports.register = function(server, options, next){
 												var total_price = price * number;
 												server.plugins['models'].ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,sku_id,function(err,results){
 													if (!err){
-														return reply({"success":true,"message":"ok","service_info":service_info});
+														return reply({"success":true,"message":"ok","service_info":service_info,"order_id":order_id});
 													}else {
 														return reply({"success":false,"message":results.message,"service_info":service_info});
 													}
@@ -902,7 +902,7 @@ exports.register = function(server, options, next){
 												}
 												delete_shopping_carts(ids,function(err,content){
 													if (!err) {
-														return reply({"success":true,"message":"ok","service_info":service_info});
+														return reply({"success":true,"order_id":order_id,"service_info":service_info});
 													}else {
 														return reply({"success":false,"message":results.message,"service_info":service_info});
 													}
