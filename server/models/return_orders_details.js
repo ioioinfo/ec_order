@@ -4,6 +4,47 @@ const uuidV1 = require('uuid/v1');
 
 var return_orders_details = function(server) {
 	return {
+		//查询单条退单
+		search_return_order: function(id,cb){
+			var query = `select id,order_id,person_id,return_status,logistics_id,product_Id,
+			logistics_company,return_reason,number,created_at from return_orders_details
+			where flag = 0 and id = ?`;
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, id, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,results);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
+
+		//查询退货单列表
+		search_return_list: function(person_id,cb){
+			var query = `select id,order_id,person_id,return_status,logistics_id,product_Id,
+			logistics_company,return_reason,number,created_at from return_orders_details
+			where flag = ?`;
+			var columns = [0];
+			if (person_id && person_id!="") {
+				query = query +" and person_id = ?"
+				columns.push(person_id);
+			}
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, columns, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,results);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
+
 		//更新状态
 		update_return_status: function(id,status,cb){
 			var query = "update return_orders_details set return_status =? where id =?"

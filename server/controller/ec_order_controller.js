@@ -147,7 +147,71 @@ exports.register = function(server, options, next){
 		var url = "http://127.0.0.1:18002/product_info?product_id="+product_id;
 		do_get_method(url,cb);
 	};
+	//查询ec所有订单
+	var get_orders_list = function(cb){
+		server.plugins['models'].ec_orders.get_orders_list(function(err,results){
+			cb(err,results);
+		});
+	};
 	server.route([
+		//导入出订单
+		{
+			method: 'GET',
+			path: '/export_ec_order',
+			handler: function(request, reply){
+				get_orders_list(function(err,results){
+					if (!err) {
+						if (results.length===0) {
+							return reply({"success":false,"message":"没有订单","service_info":service_info});
+						}
+						var order_ids = [];
+						for (var i = 0; i < results.length; i++) {
+							order_ids.push(results[i].order_id);
+						}
+						get_ec_all_details(order_ids,function(error,content){
+							if (!error) {
+								var orders = [];
+								for (var i = 0; i < results.length; i++) {
+									for (var j = 0; j < content.length; j++) {
+										if (results[i].order_id == content[j].order_id) {
+											var order = {};
+											order.order_id = results[i].order_id;
+											order.place_order = results[i].created_at_text;
+											order.pay_date = "";
+											order.send_date = "";
+											order.close_order = results[i].updated_at_text;
+											order.logistics_company = "";
+											order.logistics_id = results[i].logistic_id;
+											order.product_id = content[j].product_id;
+											order.products_industries = "";
+											order.number = content[j].number;
+											order.marketing_price = content[j].marketing_price;
+											order.price = content[j].price;
+											order.child_status = "";
+											order.return_status = "";
+											order.total_price = content[j].total_price;
+											order.logistics_price = results[i].logistics_price;
+											order.order_status = results[i].order_status;
+											order.person_nickname = "";
+											order.receive_person = results[i].linkname;
+											order.mobile = results[i].mobile;
+											order.tele_phone = "";
+											order.detail_address = results[i].detail_address;
+											orders.push(order);
+										}
+									}
+								}
+								reply({"success":true,"orders":orders,"service_info":service_info});
+							}else {
+								return reply({"success":false,"message":content.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 		//删除订单
 		{
 			method: 'POST',
@@ -287,6 +351,9 @@ exports.register = function(server, options, next){
 			handler: function(request, reply){
 				var order_id = request.payload.order_id;
 				var order_status = request.payload.order_status;
+				if (!order_id ||!order_status) {
+					return reply({"success":false,"message":"params null","service_info":service_info});
+				}
 				server.plugins['models'].ec_orders.update_order_status(order_id,order_status,function(err,results){
 					if (!err) {
 						return reply({"success":true,"message":"ok","service_info":service_info});
@@ -363,7 +430,12 @@ exports.register = function(server, options, next){
 						};
 						logistics_payment(info,function(err,result){
 							if (!err) {
-								var amount = result.row.user_amount;
+								var lgtic_pay = result.row.user_amount;
+								if (!lgtic_pay && lgtic_pay!=0) {
+									lgtic_pay = 150;
+								}else {
+									var amount = lgtic_pay;
+								}
 								var actual_price = gain_point + amount;
 								generate_order_no("ec_order",function(err,row){
 									if (!err) {
@@ -798,10 +870,15 @@ exports.register = function(server, options, next){
 							"end_city" : JSON.parse(address).city,
 							"end_district" : JSON.parse(address).district
 						};
-						
+
 						logistics_payment(info,function(err,result){
 							if (!err) {
-								var amount = result.row.user_amount;
+								var lgtic_pay = result.row.user_amount;
+								if (!lgtic_pay && lgtic_pay!=0) {
+									lgtic_pay = 150;
+								}else {
+									amount = lgtic_pay;
+								}
 								var actual_price = amount + products_price;
 								generate_order_no("ec_order",function(err,row){
 									if (!err) {

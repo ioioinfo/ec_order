@@ -1,6 +1,7 @@
 const uu_request = require('../utils/uu_request');
 const uuidV1 = require('uuid/v1');
 var service_info = "ec order service";
+var eventproxy = require('eventproxy');
 
 var do_get_method = function(url,cb){
 	uu_request.get(url, function(err, response, body){
@@ -43,7 +44,108 @@ exports.register = function(server, options, next){
 		});
 	};
 	server.route([
-		//订单物流信息
+		//退单完成 finish_return_order
+		{
+			method: 'POST',
+			path: '/finish_return_order',
+			handler: function(request, reply){
+				var id = request.payload.id;
+				if (!id) {
+					return reply({"success":false,"message":"param null"});
+				}
+				server.plugins['models'].return_orders_details.search_return_order(id,function(err,results){
+					if (!err) {
+						if (results.length ==0) {
+							return reply({"success":false,"message":"no found data","service_info":service_info});
+						}
+						var return_order = results[0];
+						var order_id = return_order.order_id;
+						var order_status = 10;
+						var status =5;
+						var ep =  eventproxy.create("order_status","return_status",function(order_status,return_status){
+							if (order_status == 0 && return_status==0) {
+								return reply({"success":false,"message":"order and return no change","service_info":service_info});
+							}
+							if (order_status == 0) {
+								return reply({"success":false,"message":"order no change","service_info":service_info});
+							}
+							if (return_status == 0) {
+								return reply({"success":false,"message":"return no change","service_info":service_info});
+							}
+							return reply({"success":true,"service_info":service_info});
+						});
+						server.plugins['models'].ec_orders.update_order_status(order_id,order_status,function(err,results){
+							if (results.affectedRows>0) {
+								ep.emit("order_status",1);
+							}else {
+								ep.emit("order_status",0);
+							}
+						});
+
+						server.plugins['models'].return_orders_details.update_return_status(id,status,function(err,results){
+							if (results.affectedRows>0) {
+								ep.emit("return_status",1);
+							}else {
+								ep.emit("return_status",0);
+							}
+						});
+
+
+					}else {
+						return reply({"success":false,"message":results.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+		//退货单明细
+		{
+			method: 'GET',
+			path: '/search_return_order',
+			handler: function(request, reply){
+				var id = request.query.id;
+				if (!id) {
+					return reply({"success":false,"message":"param null"});
+				}
+                server.plugins['models'].return_orders_details.search_return_order(id,function(err,results){
+                    if (!err) {
+						var return_order = results[0];
+						server.plugins['models'].return_pictures.search_return_pictures(id,function(err,results){
+		                    if (!err) {
+								var imgs = [];
+								for (var i = 0; i < results.length; i++) {
+									imgs.push(results[i].location);
+								}
+								return_order.imgs=imgs;
+								return reply({"success":true,"row":return_order,"service_info":service_info});
+		                    }else {
+		                        return reply({"success":false,"message":results.message,"service_info":service_info});
+		                    }
+		                });
+                    }else {
+                        return reply({"success":false,"message":results.message,"service_info":service_info});
+                    }
+                });
+			}
+		},
+		//退货单列表 以及个人的
+		{
+			method: 'GET',
+			path: '/search_return_list',
+			handler: function(request, reply){
+				var person_id = "";
+				if (request.query.person_id) {
+					person_id = request.query.person_id;
+				}
+                server.plugins['models'].return_orders_details.search_return_list(person_id,function(err,results){
+                    if (!err) {
+                        return reply({"success":true,"rows":results,"service_info":service_info});
+                    }else {
+                        return reply({"success":false,"message":results.message,"service_info":service_info});
+                    }
+                });
+			}
+		},
+		//退单申请
 		{
 			method: 'POST',
 			path: '/create_return_apply',
@@ -77,7 +179,7 @@ exports.register = function(server, options, next){
                 });
 			}
 		},
-        //订单物流信息
+        //修改退单状态
 		{
 			method: 'POST',
 			path: '/update_return_status',

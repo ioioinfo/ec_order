@@ -3,6 +3,31 @@ var EventProxy = require('eventproxy');
 
 var ec_orders = function(server) {
 	return {
+
+		//获取所有订单信息
+		get_orders_list :  function(cb){
+			var query = `select order_id,person_id,gain_point,card_reduce,logistic_id,
+				total_number,logistics_price,actual_price,send_seller,type,linkname,
+				mobile,detail_address,updated_at,
+				products_price,order_date,order_status,store_id,pay_way,created_at,
+				DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S') created_at_text,
+				DATE_FORMAT(updated_at,'%Y-%m-%d %H:%i:%S') updated_at_text
+				from ec_orders
+				where flag =0
+			`;
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query,function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,null);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
+
 		//单个订单查询
 		get_order : function(order_id, cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,type,
@@ -134,7 +159,7 @@ var ec_orders = function(server) {
 		},
 		//更新订单状态
 		update_order_status : function(order_id,order_status,cb){
-			var query = `update ec_orders set order_status = ?
+			var query = `update ec_orders set order_status = ?,updated_at = now()
 			where order_id = ? and flag =0`;
 			server.plugins['mysql'].query(query,[order_status,order_id], function(err, results) {
 				if (err) {
