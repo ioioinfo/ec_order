@@ -136,6 +136,16 @@ exports.register = function(server, options, next){
 		};
 		do_post_method(url,data,cb);
 	};
+	//发货时间
+	var delivery_time_by_order = function(order_id,cb){
+		var url = "http://211.149.248.241:18013/logistics/delivery_time_by_order?org_code=ioio&order_id="+order_id;
+		do_get_method(url,cb);
+	}
+	//订单信息
+	var get_order_pay_infos = function(order_id,cb){
+		var url = "http://139.196.148.40:18008/get_order_pay_infos?sob_id=ioio&order_id="+order_id;
+		do_get_method(url,cb);
+	};
 	//删除购物车
 	var delete_shopping_carts = function(ids,cb){
 		var url = "http://127.0.0.1:18015/delete_shopping_carts?ids=";
@@ -679,7 +689,22 @@ exports.register = function(server, options, next){
 											var product = products[i];
 											products_map[product.id] = product;
 										}
-										return reply({"success":true,"message":"ok","orders":results,"details":order_map,"products":products_map,"service_info":service_info});
+										get_order_pay_infos(order_id,function(err,rows){
+											if (!err) {
+												var pay_info = rows.rows;
+												delivery_time_by_order(order_id,function(err,row){
+													if (!err) {
+														var delivery_time = row.delivery_time;
+														return reply({"success":true,"message":"ok","orders":results,"details":order_map,"products":products_map,"service_info":service_info,"pay_info":pay_info,"delivery_time":delivery_time});
+													}else {
+														var delivery_time = "未发货";
+														return reply({"success":true,"message":"ok","orders":results,"details":order_map,"products":products_map,"service_info":service_info,"pay_info":pay_info,"delivery_time":delivery_time});
+													}
+												});
+											}else {
+												return reply({"success":false,"message":rows.message,"service_info":service_info});
+											}
+										});
 									}else {
 										return reply({"success":false,"message":rows.message,"service_info":service_info});
 									}
