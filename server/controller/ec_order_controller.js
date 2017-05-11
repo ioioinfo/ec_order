@@ -557,7 +557,7 @@ exports.register = function(server, options, next){
 					if (!err) {
 						var orders = results;
 						if (orders.length>0) {
-							server.plugins['models'].ec_orders.mp_orders_count(function(err,results){
+							server.plugins['models'].ec_orders.mp_orders_count(params,function(err,results){
 								if (!err) {
 									var num = results[0].num;
 									return reply({"success":true,"message":"ok","rows":orders,"num":num,"service_info":service_info});

@@ -104,7 +104,7 @@ exports.register = function(server, options, next){
 			cb(err,results);
 		});
 	};
-	
+
 	server.route([
 		//pos端
 
@@ -562,6 +562,10 @@ exports.register = function(server, options, next){
 			path: '/get_all_num',
 			handler: function(request, reply){
 				var params = request.query.params;
+				if (!params) {
+					return reply({"success":false,"message":"params null","service_info":service_info});
+				}
+				params = JSON.parse(params);
 				// if (!params) {
 				// 	return reply({"success":false,"message":"params null","service_info":service_info});
 				// }

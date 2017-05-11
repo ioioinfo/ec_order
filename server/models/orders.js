@@ -66,6 +66,13 @@ var orders = function(server) {
 		get_all_orders :  function(params,cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,
 			actual_price,order_date,DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text,order_status,store_id,pos_id from orders where flag =0`;
+
+			var colums=[];
+			if (params.order_id) {
+				query = query + " and order_id = ? ";
+				colums.push(params.order_id);
+			}
+
 			if (params.thisPage) {
 				var offset = params.thisPage-1;
 				if (params.everyNum) {
@@ -73,13 +80,10 @@ var orders = function(server) {
 				}else {
 					query = query + " limit " + offset*20 + ",20";
 				}
-			}else if (params.order_id) {
-				var order_id = params.order_id;
-				query = query + " and order_id='"+ order_id +"'";
 			}
 
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
-				connection.query(query, function(err, results) {
+				connection.query(query,colums, function(err, results) {
 					connection.release();
 					if (err) {
 						console.log(err);
@@ -93,8 +97,13 @@ var orders = function(server) {
 		//根据条件查询总数量
 		get_all_num :  function(params,cb){
 			var query = `select count(*) num from orders where flag =0`;
+			var colums=[];
+			if (params.order_id) {
+				query = query + " and order_id = ? ";
+				colums.push(params.order_id);
+			}
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
-				connection.query(query, function(err, results) {
+				connection.query(query,colums, function(err, results) {
 					connection.release();
 					if (err) {
 						console.log(err);

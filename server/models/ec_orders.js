@@ -60,6 +60,20 @@ var ec_orders = function(server) {
 				from ec_orders
 				where flag =0
 			`;
+			var colums=[];
+			if (params.order_id) {
+				query = query + " and order_id = ? ";
+				colums.push(params.order_id);
+			}
+			if (params.linkname) {
+				query = query + " and linkname = ? ";
+				colums.push(params.linkname);
+			}
+			if (params.mobile) {
+				query = query + " and mobile = ? ";
+				colums.push(params.mobile);
+			}
+
 			if (params.thisPage) {
 				var offset = params.thisPage-1;
 				if (params.everyNum) {
@@ -69,7 +83,7 @@ var ec_orders = function(server) {
 				}
 			}
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
-				connection.query(query, function(err, results) {
+				connection.query(query,colums, function(err, results) {
 					connection.release();
 					if (err) {
 						console.log(err);
@@ -82,13 +96,26 @@ var ec_orders = function(server) {
 		},
 
 		//订单数量
-		mp_orders_count : function(cb){
+		mp_orders_count : function(params,cb){
 			var query = `select count(1) num
 				from ec_orders
 				where flag =0
 			`;
+			var colums=[];
+			if (params.order_id) {
+				query = query + " and order_id = ? ";
+				colums.push(params.order_id);
+			}
+			if (params.linkname) {
+				query = query + " and linkname = ? ";
+				colums.push(params.linkname);
+			}
+			if (params.mobile) {
+				query = query + " and mobile = ? ";
+				colums.push(params.mobile);
+			}
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
-				connection.query(query, function(err, results) {
+				connection.query(query,colums, function(err, results) {
 					connection.release();
 					if (err) {
 						console.log(err);
