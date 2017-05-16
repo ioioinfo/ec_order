@@ -46,7 +46,7 @@ exports.register = function(server, options, next){
 	//订单支付信息
 	var get_order_pay_infos = function(order_id,cb){
 		var url = "http://139.196.148.40:18008/get_order_pay_infos?order_id=";
-		url = url + order_id;
+		url = url + order_id + "&sob_id=ioio";
 		do_get_method(url,cb);
 	}
 	//查询订单
