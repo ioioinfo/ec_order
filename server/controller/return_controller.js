@@ -156,11 +156,12 @@ exports.register = function(server, options, next){
 				var product_id = request.payload.product_id;
 				var return_reason = request.payload.return_reason;
 				var number = request.payload.number;
+				var other_reason = request.payload.other_reason;
                 var imgs = request.payload.imgs;
-                if (!order_id || !person_id || !product_id || !return_reason || !number || !imgs) {
+                if (!order_id || !person_id || !product_id || !return_reason || !number || !imgs || !other_reason) {
 					return reply({"success":false,"message":"param null"});
 				}
-                server.plugins['models'].return_orders_details.create_return_apply(id,order_id,person_id,product_id,return_reason,number,function(err,results){
+                server.plugins['models'].return_orders_details.create_return_apply(id,order_id,person_id,product_id,return_reason,number,other_reason,function(err,results){
                     if (results.affectedRows>0) {
                         imgs = JSON.parse(imgs);
                         for (var i = 0; i < imgs.length; i++) {

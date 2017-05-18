@@ -392,7 +392,7 @@ exports.register = function(server, options, next){
 						var order_id = row.order_no;
 						server.plugins['models'].recharge_order.save_order(order_id,activity_id,person_id,marketing_price,actual_price,pay_way,function(err,results){
 							if (!err) {
-								return reply({"success":true,"message":"ok","orders":results,"service_info":service_info});
+								return reply({"success":true,"message":"ok","orders":results,"order_id":order_id,"service_info":service_info});
 							}else {
 								return reply({"success":false,"message":results.message,"service_info":service_info});
 							}

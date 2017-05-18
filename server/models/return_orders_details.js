@@ -62,13 +62,13 @@ var return_orders_details = function(server) {
 			});
 		},
 
-        create_return_apply: function(id,order_id,person_id,product_id,return_reason,number,cb) {
-			var query = `insert into return_orders_details(id, order_id, person_id, product_id, return_reason, number, return_status, created_at, updated_at, flag)
+        create_return_apply: function(id,order_id,person_id,product_id,return_reason,number,other_reason,cb) {
+			var query = `insert into return_orders_details(id, order_id, person_id, product_id, return_reason, number, other_reason, return_status, created_at, updated_at, flag)
 			values
 			(?, ?, ?, ?, ?,
-			?, 0, now(), now(), 0)
+			?, ?, 0, now(), now(), 0)
 			`;
-			var columns=[id,order_id,person_id,product_id,return_reason,number];
+			var columns=[id,order_id,person_id,product_id,return_reason,number,other_reason];
             server.plugins.mysql.query(query, columns, function(err, rows) {
                 if (err) {
                     console.log(err);
