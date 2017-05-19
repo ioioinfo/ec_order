@@ -36,6 +36,11 @@ var do_result = function(err,result,cb){
 		cb(true,null);
 	}
 };
+//批量查询商品信息
+var find_products_with_picture = function(product_ids,cb){
+	var url = "http://127.0.0.1:18002/find_products_with_picture?product_ids="+product_ids;
+	do_get_method(url,cb);
+};
 exports.register = function(server, options, next){
 	//查询ec  单条order信息
 	var get_ec_order = function(order_id,cb){
@@ -138,7 +143,34 @@ exports.register = function(server, options, next){
 				}
                 server.plugins['models'].return_orders_details.search_return_list(person_id,function(err,results){
                     if (!err) {
-                        return reply({"success":true,"rows":results,"service_info":service_info});
+						console.log("results:"+JSON.stringify(results));
+						if (results.length == 0) {
+							reply({"success":true,"message":"ok","rows":[],"products":{},"service_info":service_info});
+						}
+						var product_map = {};
+						var product_ids = [];
+						for (var i = 0; i < results.length; i++) {
+							var order = results[i];
+							if (!product_map[order.product_id]) {
+								var product_id = order.product_id;
+								product_ids.push(product_id);
+								product_map[order.product_id] = order;
+							}
+						}
+						product_ids = JSON.stringify(product_ids);
+						find_products_with_picture(product_ids,function(err, rows){
+							if (!err) {
+								var products_map = {};
+								var products = rows.products;
+								for (var i = 0; i < products.length; i++) {
+									var product = products[i];
+									products_map[product.id] = product;
+								}
+								return reply({"success":true,"message":"ok","rows":results,"products":products_map,"service_info":service_info});
+							}else {
+								return reply({"success":false,"message":rows.message,"service_info":service_info});
+							}
+						});
                     }else {
                         return reply({"success":false,"message":results.message,"service_info":service_info});
                     }

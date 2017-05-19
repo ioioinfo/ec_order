@@ -6,7 +6,7 @@ var return_orders_details = function(server) {
 	return {
 		//查询单条退单
 		search_return_order: function(id,cb){
-			var query = `select id,order_id,person_id,return_status,logistics_id,product_Id,
+			var query = `select id,order_id,person_id,return_status,logistics_id,product_id,
 			logistics_company,return_reason,number,created_at from return_orders_details
 			where flag = 0 and id = ?`;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
@@ -24,7 +24,7 @@ var return_orders_details = function(server) {
 
 		//查询退货单列表
 		search_return_list: function(person_id,cb){
-			var query = `select id,order_id,person_id,return_status,logistics_id,product_Id,
+			var query = `select id,order_id,person_id,return_status,logistics_id,product_id,
 			logistics_company,return_reason,number,created_at from return_orders_details
 			where flag = ?`;
 			var columns = [0];
