@@ -48,7 +48,7 @@ var orders = function(server) {
 			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,
 				actual_price,order_date,DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text,order_status,store_id,pos_id
 				from orders
-				where order_id =? and flag =0 order by created_at desc
+				where order_id =? and flag =0 order by order_date desc
 			`;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, [order_id], function(err, results) {
@@ -72,7 +72,7 @@ var orders = function(server) {
 				query = query + " and order_id = ? ";
 				colums.push(params.order_id);
 			}
-
+			query = query +" order by order_date desc";
 			if (params.thisPage) {
 				var offset = params.thisPage-1;
 				if (params.everyNum) {
@@ -81,7 +81,6 @@ var orders = function(server) {
 					query = query + " limit " + offset*20 + ",20";
 				}
 			}
-			query = query +" order by created_at desc";
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query,colums, function(err, results) {
 					connection.release();

@@ -25,7 +25,7 @@ var return_orders_details = function(server) {
 		//查询退货单列表
 		search_return_list: function(person_id,cb){
 			var query = `select id,order_id,person_id,return_status,logistics_id,product_id,
-			logistics_company,return_reason,number,created_at from return_orders_details
+			logistics_company,return_reason,number,created_at,DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S') created_at_text from return_orders_details
 			where flag = ?`;
 			var columns = [0];
 			if (person_id && person_id!="") {
