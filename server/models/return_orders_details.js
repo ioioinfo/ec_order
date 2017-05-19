@@ -29,9 +29,10 @@ var return_orders_details = function(server) {
 			where flag = ?`;
 			var columns = [0];
 			if (person_id && person_id!="") {
-				query = query +" and person_id = ?"
+				query = query +" and person_id = ?";
 				columns.push(person_id);
 			}
+			query = query +" order by created_at desc";
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {
 					connection.release();

@@ -48,7 +48,7 @@ var orders = function(server) {
 			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,
 				actual_price,order_date,DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text,order_status,store_id,pos_id
 				from orders
-				where order_id =? and flag =0
+				where order_id =? and flag =0 order by created_at desc
 			`;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, [order_id], function(err, results) {
@@ -65,7 +65,7 @@ var orders = function(server) {
 		//获取所有订单信息
 		get_all_orders :  function(params,cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,
-			actual_price,order_date,DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text,order_status,store_id,pos_id from orders where flag =0`;
+			actual_price,order_date,DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text,order_status,store_id,pos_id from orders where flag =0 `;
 
 			var colums=[];
 			if (params.order_id) {
@@ -81,7 +81,7 @@ var orders = function(server) {
 					query = query + " limit " + offset*20 + ",20";
 				}
 			}
-
+			query = query +" order by created_at desc";
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query,colums, function(err, results) {
 					connection.release();

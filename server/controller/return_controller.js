@@ -2,6 +2,13 @@ const uu_request = require('../utils/uu_request');
 const uuidV1 = require('uuid/v1');
 var service_info = "ec order service";
 var eventproxy = require('eventproxy');
+var return_status_map = {
+	"0" : "退单申请中",
+	"1" : "等待快递员收货",
+	"2" : "等待卖家检查",
+	"3" : "退款申请中",
+	"4" : "退款成功"
+};
 
 var do_get_method = function(url,cb){
 	uu_request.get(url, function(err, response, body){
@@ -151,6 +158,7 @@ exports.register = function(server, options, next){
 						var product_ids = [];
 						for (var i = 0; i < results.length; i++) {
 							var order = results[i];
+							results[i].return_status = return_status_map[results[i].return_status];
 							if (!product_map[order.product_id]) {
 								var product_id = order.product_id;
 								product_ids.push(product_id);

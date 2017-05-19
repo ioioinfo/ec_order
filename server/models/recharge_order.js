@@ -30,7 +30,7 @@ var recharge_order = function(server) {
 				marketing_price, actual_price, serial_number, pay_way,
 				pay_date, order_status, created_at
 				from recharge_order
-				where flag =0 and order_id = ?
+				where flag =0 and order_id = ? order by created_at desc 
 			`;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query,[order_id], function(err, results) {
