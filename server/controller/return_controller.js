@@ -239,6 +239,58 @@ exports.register = function(server, options, next){
                 });
 			}
 		},
+		//后台退货单列表
+		{
+			method: 'GET',
+			path: '/return_list',
+			handler: function(request, reply){
+				var params = request.query.params;
+				if (!params) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+                server.plugins['models'].return_orders_details.return_list(params,function(err,results){
+                    if (!err) {
+						if (results.length == 0) {
+							reply({"success":true,"message":"ok","rows":[],"products":{},"service_info":service_info});
+						}
+						var product_map = {};
+						var product_ids = [];
+						for (var i = 0; i < results.length; i++) {
+							var order = results[i];
+							results[i].return_status = return_status_map[results[i].return_status];
+							if (!product_map[order.product_id]) {
+								var product_id = order.product_id;
+								product_ids.push(product_id);
+								product_map[order.product_id] = order;
+							}
+						}
+						product_ids = JSON.stringify(product_ids);
+						find_products_with_picture(product_ids,function(err, rows){
+							if (!err) {
+								var products_map = {};
+								var products = rows.products;
+								for (var i = 0; i < products.length; i++) {
+									var product = products[i];
+									products_map[product.id] = product;
+								}
+								server.plugins['models'].return_orders_details.account_return_list(params,function(err,row){
+									if (!err) {
+										return reply({"success":true,"message":"ok","rows":results,"products":products_map,"num":row[0].num,"service_info":service_info});
+									}else {
+										return reply({"success":false,"message":row.message,"service_info":service_info});
+									}
+								});
+							}else {
+								return reply({"success":false,"message":rows.message,"service_info":service_info});
+							}
+						});
+                    }else {
+                        return reply({"success":false,"message":results.message,"service_info":service_info});
+                    }
+                });
+			}
+		},
+
 
 	]);
 
