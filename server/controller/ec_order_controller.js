@@ -164,6 +164,56 @@ exports.register = function(server, options, next){
 		});
 	};
 	server.route([
+		//批量查明细
+		{
+			method: 'GET',
+			path: '/search_orders_infos',
+			handler: function(request, reply){
+				var order_ids = request.query.order_ids;
+				order_ids = JSON.parse(order_ids);
+				server.plugins['models'].ec_orders.search_orders(order_ids,function(err,results){
+					if (!err) {
+						if (results.length===0) {
+							return reply({"success":false,"message":"没有订单","service_info":service_info});
+						}
+						get_ec_all_details(order_ids,function(error,content){
+							if (!error) {
+								for (var i = 0; i < results.length; i++) {
+									var details = [];
+									for (var j = 0; j < content.length; j++) {
+										if (results[i].order_id == content[j].order_id) {
+											var order = {};
+											order.order_id = results[i].order_id;
+											order.pay_date = "";
+											order.send_date = "";
+											order.logistics_company = "";
+											order.product_id = content[j].product_id;
+											order.products_industries = "";
+											order.number = content[j].number;
+											order.marketing_price = content[j].marketing_price;
+											order.price = content[j].price;
+											order.child_status = "";
+											order.return_status = "";
+											order.total_price = content[j].total_price;
+											order.person_nickname = "";
+											order.tele_phone = "";
+											details.push(order);
+										}
+
+										results[i].details = details;
+									}
+								}
+								reply({"success":true,"rows":results,"service_info":service_info});
+							}else {
+								return reply({"success":false,"message":content.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 		//导入出订单
 		{
 			method: 'GET',
