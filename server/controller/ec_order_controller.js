@@ -203,7 +203,40 @@ exports.register = function(server, options, next){
 										results[i].details = details;
 									}
 								}
-								reply({"success":true,"rows":results,"service_info":service_info});
+								var order_map = {};
+								var product_ids = [];
+								for (var i = 0; i < content.length; i++) {
+									var order_detail = content[i];
+									product_ids.push(order_detail.product_id);
+
+									//判断order_map是否有order_id
+									if (order_map[order_detail.order_id]) {
+										//2.有的话 order_map放入 details 里面
+										var order_details = order_map[order_detail.order_id];
+										//传址！
+										order_details.push(order_detail);
+									} else {
+										// 1.没有的话
+										var order_details = [];
+										order_details.push(order_detail);
+										//order_id 对应 明细
+										order_map[order_detail.order_id] = order_details;
+									}
+								}
+								product_ids = JSON.stringify(product_ids);
+								find_products_with_picture(product_ids,function(err, rows){
+									if (!err) {
+										var products = rows.products;
+										var products_map = {};
+										for (var i = 0; i < products.length; i++) {
+											var product = products[i];
+											products_map[product.id] = product;
+										}
+										return reply({"success":true,"message":"ok","rows":results,"products":products_map,"service_info":service_info});
+									}else {
+										return reply({"success":false,"message":rows.message,"service_info":service_info});
+									}
+								});
 							}else {
 								return reply({"success":false,"message":content.message,"service_info":service_info});
 							}
