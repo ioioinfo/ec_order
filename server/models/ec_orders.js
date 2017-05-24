@@ -232,7 +232,7 @@ var ec_orders = function(server) {
 			});
 		},
 		//保存订单信息
-		save_order_infos :function(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller,address, cb) {
+		save_order_infos :function(id,order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller,address, cb) {
 			var address = JSON.parse(address);
 			var linkname = address.linkname;
 			var detail_address = address.detail_address;
@@ -247,12 +247,12 @@ var ec_orders = function(server) {
 				products_price, total_number, weight, order_status, origin, logistics_price,
 				actual_price, send_seller,created_at,updated_at, flag)
 				values
-				(uuid(),?,?,?,
+				(?,?,?,?,
 				?,?,?,?,?,?,?,
 				?,?,?,?,?,?,
 				?,?,now(),now(),0)` ;
 			console.log(query);
-			var columns=[order_id,person_id,gain_point,linkname,detail_address,mobile,province,city,district,type,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller];
+			var columns=[id,order_id,person_id,gain_point,linkname,detail_address,mobile,province,city,district,type,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller];
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {
 					connection.release();

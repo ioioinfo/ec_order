@@ -924,6 +924,7 @@ exports.register = function(server, options, next){
 				var shopping_carts = request.payload.shopping_carts;
 				var send_seller = request.payload.send_seller;
 				var address = request.payload.address;
+				var id = request.payload.id;
 				if (!person_id || !total_data || !shopping_carts) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
@@ -991,7 +992,7 @@ exports.register = function(server, options, next){
 								generate_order_no("ec_order",function(err,row){
 									if (!err) {
 										order_id = row.order_no;
-										server.plugins['models'].ec_orders.save_order_infos(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,send_seller,address,function(err,results){
+										server.plugins['models'].ec_orders.save_order_infos(id,order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,send_seller,address,function(err,results){
 											if (!err){
 												for (var i = 0; i < shopping_carts.length; i++) {
 													var product_id = shopping_carts[i].product_id;
