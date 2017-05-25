@@ -499,7 +499,8 @@ exports.register = function(server, options, next){
 				var number = request.payload.num;
 				var product_id = request.payload.product_id;
 				var sku_id = request.payload.sku_id;
-				if (!person_id || !number || !product_id || !sku_id) {
+				var id = request.payload.id;
+				if (!person_id || !number || !product_id || !sku_id || !id) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
 				get_productById(product_id,function(err,content){
@@ -533,7 +534,7 @@ exports.register = function(server, options, next){
 								generate_order_no("ec_order",function(err,row){
 									if (!err) {
 										order_id = row.order_no;
-										server.plugins['models'].ec_orders.save_order_infos(order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,send_seller,address,function(err,results){
+										server.plugins['models'].ec_orders.save_order_infos(id,order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,amount,actual_price,send_seller,address,function(err,results){
 											if (!err){
 												var product_id = product.id;
 												var order_index = 1;
