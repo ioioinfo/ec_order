@@ -290,6 +290,24 @@ exports.register = function(server, options, next){
                 });
 			}
 		},
+		//保存变异订单
+		{
+			method: 'POST',
+			path: '/save_poor_orders',
+			handler: function(request, reply){
+                var order_id = request.payload.order_id;
+                if (!order_id) {
+					return reply({"success":false,"message":"param null"});
+				}
+                server.plugins['models'].poor_orders.save_order_infos(order_id,function(err,results){
+                    if (results.affectedRows>0) {
+                        return reply({"success":true,"service_info":service_info});
+                    }else {
+                        return reply({"success":false,"message":results.message,"service_info":service_info});
+                    }
+                });
+			}
+		},
 
 
 	]);

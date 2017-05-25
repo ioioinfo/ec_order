@@ -12,6 +12,7 @@ exports.register = function(server, options, next){
 	server.expose('event_solution', require('./event_solution.js')(server));
 	server.expose('return_pictures', require('./return_pictures.js')(server));
 	server.expose('return_orders_details', require('./return_orders_details.js')(server));
+	server.expose('poor_orders', require('./poor_orders.js')(server));
 	next();
 }
 

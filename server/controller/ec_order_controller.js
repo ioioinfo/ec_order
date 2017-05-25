@@ -325,12 +325,12 @@ exports.register = function(server, options, next){
 			method: 'GET',
 			path: '/search_order_byStatus',
 			handler: function(request, reply){
-				var order_status = request.query.status;
+				var status = request.query.status;
 				var person_id = request.query.person_id;
-				if (!order_status || !person_id) {
+				if (!status || !person_id) {
 					return reply({"success":false,"message":"params null","service_info":service_info});
 				}
-				server.plugins['models'].ec_orders.search_order_byStatus(person_id,order_status,function(err,results){
+				server.plugins['models'].ec_orders.search_order_byStatus(person_id,status,function(err,results){
 					if (!err) {
 						if (!results || results.length == 0) {
 							return reply({"success":true,"message":"ok","orders":results,"details":{},"products":{},"service_info":service_info});
