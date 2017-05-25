@@ -308,7 +308,30 @@ exports.register = function(server, options, next){
                 });
 			}
 		},
-
+		//获取变异订单
+		{
+			method: 'GET',
+			path: '/get_poor_orders',
+			handler: function(request, reply){
+				server.plugins['models'].poor_orders.get_poor_orders(function(err,rows){
+					if (!err) {
+						var order_ids = [];
+						for (var i = 0; i < rows.length; i++) {
+							order_ids.push(rows[i].order_id);
+						}
+						server.plugins['models'].ec_orders.search_orders(order_ids,function(err,rows){
+							if (!err) {
+								return reply({"success":true,"rows":rows,"service_info":service_info});
+							}else {
+								return reply({"success":false,"message":rows.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":rows.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 
 	]);
 
