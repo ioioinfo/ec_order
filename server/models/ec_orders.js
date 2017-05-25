@@ -51,7 +51,7 @@ var ec_orders = function(server) {
 		},
 		//单个订单查询
 		get_order : function(order_id, cb){
-			var query = `select order_id,person_id,gain_point,card_reduce,type,
+			var query = `select id,order_id,person_id,gain_point,card_reduce,type,
 				total_number,logistics_price,actual_price,send_seller,weight,
 				linkname,detail_address,mobile,province,city,district,cancel_reason,
 				products_price,order_date,order_status,store_id,pay_way,created_at
