@@ -884,7 +884,7 @@ exports.register = function(server, options, next){
 			path: '/receive_goods_operations',
 			handler: function(request, reply){
 				var order_id = request.query.order_id;
-				var order_status = 5;
+				var order_status = 6;
 				update_order_status(order_id,order_status,function(err,result){
 					if (!err) {
 						updata_receive_time(order_id,function(err,result){
