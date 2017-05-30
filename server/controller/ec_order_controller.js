@@ -94,13 +94,13 @@ exports.register = function(server, options, next){
 		});
 	};
 	//查询最新物流信息
-	var search_logistics_info = function(logistics_id,cb){
-		var url = "http://211.149.248.241:18013/logistics/get_latest_by_order?logistics_id="+logistics_id;
+	var search_logistics_info = function(order_id,cb){
+		var url = "http://211.149.248.241:18013/logistics/get_latest_by_order?order_id="+order_id;
 		do_get_method(url,cb);
 	};
 	//查询物流信息全
-	var search_logistics_infos = function(logistics_id,cb){
-		var url = "http://211.149.248.241:18013/logistics/list_by_order?logistics_id="+logistics_id;
+	var search_logistics_infos = function(order_id,cb){
+		var url = "http://211.149.248.241:18013/logistics/list_by_order?order_id="+order_id;
 		do_get_method(url,cb);
 	};
 	//更新订单状态
@@ -330,6 +330,7 @@ exports.register = function(server, options, next){
 				if (!status || !person_id) {
 					return reply({"success":false,"message":"params null","service_info":service_info});
 				}
+				status = JSON.parse(status);
 				server.plugins['models'].ec_orders.search_order_byStatus(person_id,status,function(err,results){
 					if (!err) {
 						if (!results || results.length == 0) {
@@ -830,19 +831,9 @@ exports.register = function(server, options, next){
 				if (!order_id) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info})
 				}
-				search_logistics_id(order_id,function(err,results){
+				search_logistics_info(order_id,function(err,results){
 					if (!err) {
-						if (results.length ==0) {
-							return reply({"success":false,"message":"no data","service_info":service_info})
-						}
-						var logistics_id = results[0].logistics_id;
-						search_logistics_info(logistics_id,function(err,results){
-							if (!err) {
-								return reply({"success":true,"row":results.row,"service_info":service_info});
-							}else {
-								return reply({"success":false,"message":results.message,"service_info":service_info});
-							}
-						});
+						return reply({"success":true,"row":results.row,"service_info":service_info});
 					}else {
 						return reply({"success":false,"message":results.message,"service_info":service_info});
 					}
@@ -858,20 +849,9 @@ exports.register = function(server, options, next){
 				if (!order_id) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info})
 				}
-				search_logistics_id(order_id,function(err,results){
+				search_logistics_infos(order_id,function(err,results){
 					if (!err) {
-						if (results.length ==0) {
-							return reply({"success":false,"message":"no data","service_info":service_info})
-						}
-						var order_logistics = results[0];
-						var logistics_id = results[0].logistics_id;
-						search_logistics_infos(logistics_id,function(err,results){
-							if (!err) {
-								return reply({"success":true,"rows":results.rows,"order_logistics":order_logistics,"service_info":service_info});
-							}else {
-								return reply({"success":false,"message":results.message,"service_info":service_info});
-							}
-						});
+						return reply({"success":true,"rows":results.rows,"service_info":service_info});
 					}else {
 						return reply({"success":false,"message":results.message,"service_info":service_info});
 					}

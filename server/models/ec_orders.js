@@ -192,7 +192,7 @@ var ec_orders = function(server) {
 			var query = `select order_id,person_id,gain_point,card_reduce,mobile,type,
 			total_number,logistics_price,actual_price,linkname,detail_address,send_seller,
 			products_price,order_date,order_status,store_id,pay_way,created_at
-			from ec_orders where person_id = ? and flag = 0 and order_status = ?` ;
+			from ec_orders where person_id = ? and flag = 0 and order_status in (?)` ;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query,[person_id,order_status], function(err, results) {
 					connection.release();
