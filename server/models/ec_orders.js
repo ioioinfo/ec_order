@@ -94,7 +94,10 @@ var ec_orders = function(server) {
 				query = query + " and mobile = ? ";
 				colums.push(params.mobile);
 			}
-
+			if (params.status) {
+				query = query + " and order_status in (?) ";
+				colums.push(params.status);
+			}
 			if (params.thisPage) {
 				var offset = params.thisPage-1;
 				if (params.everyNum) {
@@ -134,6 +137,10 @@ var ec_orders = function(server) {
 			if (params.mobile) {
 				query = query + " and mobile = ? ";
 				colums.push(params.mobile);
+			}
+			if (params.status) {
+				query = query + " and order_status in (?) ";
+				colums.push(params.status);
 			}
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query,colums, function(err, results) {

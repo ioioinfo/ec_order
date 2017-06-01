@@ -109,6 +109,11 @@ exports.register = function(server, options, next){
 			cb(err,results);
 		});
 	};
+	//解库
+	var unlock_stock = function(data,cb){
+		var url = "http://211.149.248.241:12001/batch_unlock_stock";
+		do_post_method(url,data,cb);
+	}
 	//更新收货时间
 	var updata_receive_time = function(order_id,cb){
 		server.plugins['models'].order_logistics.update_receive_time(order_id,function(err,results){
@@ -403,6 +408,70 @@ exports.register = function(server, options, next){
 						return reply({"success":true,"service_info":service_info});
 					}else {
 						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+		//取消订单
+		{
+			method: 'POST',
+			path: '/order_cancel_operation',
+			handler: function(request, reply){
+				var order_id = request.payload.order_id;
+				if (!order_id) {
+					return reply({"success":false,"message":"order_id null","service_info":service_info});
+				}
+				var reason = "超时自动关闭";
+				var order_status = 7;
+				if (request.payload.reason) {
+					reason = request.payload.reason;
+				}
+				if (request.payload.order_status) {
+					reason = request.payload.order_status;
+				}
+				server.plugins['models'].ec_orders.get_order(order_id,function(err,result){
+					if (!err) {
+						if (result.length >0) {
+							if (result[0].order_status == "0" || result[0].order_status == "-1") {
+								server.plugins['models'].ec_orders.order_cancel(order_id,reason,order_status,function(err,row){
+									if (row.affectedRows>0) {
+										var order_ids = [];
+										order_ids.push(order_id);
+										get_ec_all_details(order_ids,function(error,content){
+											if (!error) {
+												var products = [];
+												for (var i = 0; i < content.length; i++) {
+													var order_detail = content[i];
+													var product = {};
+													product.product_id = order_detail.product_id;
+													product.quantity = order_detail.number;
+													products.push(product);
+												}
+												var info = {"batch_id":order_id,"products":JSON.stringify(products),"platform_code":"ioio"};
+												unlock_stock(info,function(err,content){
+													if (!err) {
+														return reply({"success":true});
+													}else {
+														return reply({"success":false,"message":content.message});
+													}
+												});
+											}else {
+												return reply({"success":false,"message":content.message,"service_info":service_info});
+											}
+										});
+
+									}else {
+										return reply({"success":false,"message":row.message,"service_info":service_info});
+									}
+								});
+							}else {
+								return reply({"success":false,"message":"订单装状态不符","service_info":service_info});
+							}
+						}else {
+							return reply({"success":false,"message":"没有找到订单","service_info":service_info});
+						}
+					}else {
+						return reply({"success":false,"message":results.message,"service_info":service_info});
 					}
 				});
 			}
