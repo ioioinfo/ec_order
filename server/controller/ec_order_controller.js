@@ -168,7 +168,60 @@ exports.register = function(server, options, next){
 			cb(err,results);
 		});
 	};
+	//解库加出库
+	var batch_unlock_and_outbound = function(data,cb){
+		var url = "http://211.149.248.241:12001/batch_unlock_and_outbound";
+		do_post_method(url,data,cb);
+	};
 	server.route([
+		//发货更新状态减少库存
+		{
+			method: 'POST',
+			path: '/update_order_status_delivery',
+			handler: function(request, reply){
+				var order_id = request.payload.order_id;
+				var order_status = 4;
+				if (!order_id) {
+					return reply({"success":false,"message":"params null","service_info":service_info});
+				}
+				var order_ids = [];
+				order_ids.push(order_id);
+				get_ec_all_details(order_ids,function(error,content){
+					if (!error) {
+						var products = [];
+						for (var i = 0; i < content.length; i++) {
+							var order_detail = content[i];
+							var product = {
+								"product_id": order_detail.product_id,
+								"quantity": order_detail.number
+							};
+							products.push(product);
+						}
+						products = JSON.stringify(products);
+						var data = {
+							"platform_code":"ioio",
+							"batch_id":order_id,
+							"products":products
+						};
+						batch_unlock_and_outbound(data,function(err,content){
+							if (!err) {
+								server.plugins['models'].ec_orders.update_order_status(order_id,order_status,function(err,results){
+									if (!err) {
+										return reply({"success":true,"message":"ok","service_info":service_info});
+									}else {
+										return reply({"success":false,"message":results.message,"service_info":service_info});
+									}
+								});
+							}else {
+								return reply({"success":false,"message":content.message,"service_info":content.service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":content.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 		//批量查明细
 		{
 			method: 'GET',
