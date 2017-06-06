@@ -616,13 +616,23 @@ exports.register = function(server, options, next){
 				}
 				get_orders_byDate(date1,date2,function(err, results){
 					if (!err) {
-						if (results.length > 0) {
-							return reply({"success":true,"message":"ok","rows":results,"service_info":service_info});
-						}else {
-							return reply({"success":true,"message":"ok","rows":null,"service_info":service_info});
+						var order_ids = [];
+						for (var i = 0; i < results.length; i++) {
+							order_ids.push(results[i].order_id);
 						}
+						server.plugins['models'].order_details.search_orders_details(order_ids,function(err,rows){
+							if (!err) {
+								var prducts_num = 0;
+								for (var i = 0; i < rows.length; i++) {
+									prducts_num = prducts_num + rows[i].number;
+								}
+								return reply({"success":true,"prducts_num":prducts_num,"rows":results,"service_info":service_info});
+							}else {
+								return reply({"success":false,"message":rows.message,"service_info":service_info});
+							}
+						});
 					}else {
-						return reply({"success":false,"message":"error","service_info":service_info});
+						return reply({"success":false,"message":results.message,"service_info":service_info});
 					}
 				});
 			}
