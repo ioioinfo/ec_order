@@ -616,6 +616,9 @@ exports.register = function(server, options, next){
 				}
 				get_orders_byDate(date1,date2,function(err, results){
 					if (!err) {
+						if (results.length == 0) {
+							return reply({"success":true,"prducts_num":0,"rows":[],"service_info":service_info});
+						}
 						var order_ids = [];
 						for (var i = 0; i < results.length; i++) {
 							order_ids.push(results[i].order_id);
