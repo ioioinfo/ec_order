@@ -120,6 +120,9 @@ exports.register = function(server, options, next){
 				}
                 server.plugins['models'].return_orders_details.search_return_order(id,function(err,results){
                     if (!err) {
+						if (results.length==0) {
+							return reply({"success":false,"message":"id not exist ","service_info":service_info});
+						}
 						var return_order = results[0];
 						server.plugins['models'].return_pictures.search_return_pictures(id,function(err,results){
 		                    if (!err) {
