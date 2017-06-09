@@ -27,8 +27,8 @@ var do_post_method = function(data,url,cb){
 
 exports.register = function(server, options, next){
 	//pos端
-	var save_order = function(order_id,person_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,cb){
-		server.plugins['models'].orders.save_orders(order_id,person_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err,results){
+	var save_order = function(order_id,person_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,operation_person,cb){
+		server.plugins['models'].orders.save_orders(order_id,person_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,operation_person,function(err,results){
 			cb(err,results);
 		});
 	};
@@ -79,12 +79,6 @@ exports.register = function(server, options, next){
 	var find_products_with_picture = function(product_ids,cb){
 		var url = "http://127.0.0.1:18002/find_products_with_picture?product_ids="+product_ids;
 		do_get_method(url,cb);
-	};
-	//得到所有订单信息
-	var get_all_orders = function(params,cb){
-		server.plugins['models'].orders.get_all_orders(params,function(err,results){
-			cb(err,results);
-		});
 	};
 	//
 	var get_all_num = function(params,cb){
@@ -259,16 +253,17 @@ exports.register = function(server, options, next){
 				var store_id = request.payload.store_id;
 				var small_change = request.payload.small_change;
 				var person_id = request.payload.person_id;
+				var operation_person = request.payload.operation_person;
 				products = JSON.parse(products);
 				var order_id;
-				if (!actual_price || !marketing_price || !pos_id || !operation_system || !origin || !products || !store_id || !small_change) {
+				if (!actual_price || !marketing_price || !pos_id || !operation_system || !origin || !products || !store_id || !small_change || !operation_person) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
 				generate_order_no(function(err,row){
 					if (!err) {
 						if (row.success) {
 							order_id = row.order_no;
-							save_order(order_id,person_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,function(err, results){
+							save_order(order_id,person_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,operation_person,function(err, results){
 								if (results.affectedRows>0) {
 									for (var i = 0; i < products.length; i++) {
 										var product = products[i];
@@ -529,29 +524,6 @@ exports.register = function(server, options, next){
 						}
 					}else {
 						ep.emit("pay_infos", null);
-					}
-				});
-			}
-		},
-		//得到所有订单
-		{
-			method: 'GET',
-			path: '/get_all_orders',
-			handler: function(request, reply){
-				var params = request.query.params;
-				if (!params) {
-					return reply({"success":false,"message":"params null","service_info":service_info});
-				}
-				params = JSON.parse(params);
-				get_all_orders(params,function(err, results){
-					if (!err) {
-						if (results.length > 0) {
-							return reply({"success":true,"message":"ok","rows":results,"service_info":service_info});
-						}else {
-							return reply({"success":false,"message":results.messsage,"service_info":service_info});
-						}
-					}else {
-						return reply({"success":false,"message":results.messsage,"service_info":service_info});
 					}
 				});
 			}

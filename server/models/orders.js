@@ -5,16 +5,16 @@ var orders = function(server) {
 	return {
 		//pos端
 		//保存采购订单
-		save_orders : function(order_id,person_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change, cb) {
+		save_orders : function(order_id,person_id,vip_id,actual_price,marketing_price,pos_id,operation_system,origin,pay_way,store_id,small_change,operation_person, cb) {
 			var query = `insert into orders (id, order_id, person_id, vip_id, gain_point, card_reduce,
-			marketing_price, actual_price,order_date, order_status, operation_system, origin, pos_id, pay_way,store_id,small_change,
+			marketing_price, actual_price,order_date, order_status, operation_system, origin, pos_id, pay_way,store_id,small_change,operation_person,
 			created_at, updated_at, flag)
 			values
 			(uuid(),?,?,?,?,?,
-		 	?,?,now(),2,?,?,?,?,?,?,
+		 	?,?,now(),2,?,?,?,?,?,?,?,
 			now(),now(),0)` ;
 			console.log(query);
-			var columns=[order_id,person_id, vip_id, actual_price, marketing_price-actual_price, marketing_price,actual_price,operation_system,origin,pos_id,pay_way,store_id,small_change];
+			var columns=[order_id,person_id, vip_id, actual_price, marketing_price-actual_price, marketing_price,actual_price,operation_system,origin,pos_id,pay_way,store_id,small_change,operation_person];
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {
 					connection.release();
@@ -31,6 +31,7 @@ var orders = function(server) {
 		update_order_status: function(order_id,order_status,changes,ready_pay,cb){
 			var query = "update orders set order_status =?, changes =?,ready_pay=? where order_id =?"
 			var columns = [order_status,changes,ready_pay,order_id];
+			console.log(columns);
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {
 					connection.release();
