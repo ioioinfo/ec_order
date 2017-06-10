@@ -528,6 +528,30 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
+        
+        //得到所有订单
+		{
+			method: 'GET',
+			path: '/get_all_orders',
+			handler: function(request, reply){
+				var params = request.query.params;
+				if (!params) {
+					return reply({"success":false,"message":"params null","service_info":service_info});
+				}
+				params = JSON.parse(params);
+                server.plugins['models'].orders.get_all_orders(params,function(err,results){
+                    if (!err) {
+						if (results.length > 0) {
+							return reply({"success":true,"message":"ok","rows":results,"service_info":service_info});
+						}else {
+							return reply({"success":false,"message":results.messsage,"service_info":service_info});
+						}
+					}else {
+						return reply({"success":false,"message":results.messsage,"service_info":service_info});
+					}
+                });
+			}
+		},
 		//查询所有数量
 		{
 			method: 'GET',
