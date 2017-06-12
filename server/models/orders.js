@@ -4,8 +4,27 @@ var EventProxy = require('eventproxy');
 var orders = function(server) {
 	return {
 		//pos端
+		//退单查询
+		search_return_order: function(order_id,cb){
+			var query = `select id, order_id, marketing_price, actual_price, order_date, DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text, order_status, store_id, pos_id
+				from orders
+				where order_id like "`+ order_id +`_%" and flag = 0 order by order_date desc
+			`;
+			console.log(query);
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,results);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 		//保存退单
-		save_pos_return:function(order_id,actual_price, cb) {
+		save_pos_return:function(order_id,actual_price,index, cb) {
 			var query = `insert into orders (id, order_id,marketing_price, actual_price,
 				order_date, order_status, operation_system, origin, pos_id, pay_way,store_id,small_change,operation_person,
 				created_at, updated_at, flag)
@@ -15,7 +34,7 @@ var orders = function(server) {
 				pay_way,store_id,small_change,operation_person,
 				now(),now(),0 from orders where order_id = ?
 				` ;
-			var id = order_id+"_1";
+			var id = order_id+"_"+index;
 			var columns=[id, -actual_price, -actual_price, order_id];
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {

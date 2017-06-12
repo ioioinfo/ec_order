@@ -83,6 +83,60 @@ exports.register = function(server, options, next){
 	};
 	server.route([
 		//线上
+		//退单查询
+		{
+			method: 'GET',
+			path: '/get_return_order',
+			handler: function(request, reply){
+                var order_id = request.query.order_id;
+                if (!order_id) {
+					return reply({"success":false,"message":"order_id null"});
+				}
+                server.plugins['models'].orders.search_return_order(order_id,function(err,results){
+                    if (!err) {
+						if (results.length == 0) {
+							return reply({"success":true,"orders":[],"details_map":{},"products_map":{}});
+						}
+						var orders = results;
+						var order_ids = [];
+						for (var i = 0; i < orders.length; i++) {
+							order_ids.push(orders[i].order_id);
+						}
+						server.plugins['models'].order_details.search_orders_details(order_ids,function(err,rows){
+							if (!err) {
+								var details = rows;
+								var details_map = {};
+								var product_ids = [];
+								for (var i = 0; i < details.length; i++) {
+									if (!details_map[details[i].product_id]) {
+										product_ids.push(details[i].product_id);
+										details_map[details[i].order_id] = [];
+									}
+									details_map[details[i].order_id].push(details[i]);
+								}
+								product_ids = JSON.stringify(product_ids);
+								find_products_with_picture(product_ids,function(err, rows){
+									if (!err) {
+										var products = rows.products;
+										var products_map = {};
+										for (var i = 0; i < products.length; i++) {
+											products_map[products[i].id] = products[i];
+										}
+										return reply({"success":true,"orders":orders,"details_map":details_map,"products_map":products_map});
+									}else {
+										return reply({"success":false,"message":rows.message});
+									}
+								});
+							}else {
+								return reply({"success":false,"message":rows.message});
+							}
+						});
+                    }else {
+                        return reply({"success":false,"message":results.message,"service_info":service_info});
+                    }
+                });
+			}
+		},
 
 		//退单完成 finish_return_order
 		{
@@ -425,104 +479,111 @@ exports.register = function(server, options, next){
 										}
 									}
 								}
-								server.plugins['models'].orders.save_pos_return(order_id,total_price,function(err,results){
-									if (results.affectedRows>0) {
-										for (var i = 0; i < product_ids.length; i++) {
-											var product = product_ids[i];
-											var number = number_list[i];
-											server.plugins['models'].order_details.save_return_details(order_id,product,number,function(err,results){
-												if (results.affectedRows>0) {
-													var data = {
-														"order_id":order_id,
-														"sob_id": "ioio",
-														"platform_code" : "drp_pos",
-														"address": "上海",
-														"operator":1,
-														"main_role_id":1
-													};
-
-													var ep =  eventproxy.create("ali","vip","cash",
-														function(ali,vip,cash){
-															if (!ali) {
-																return reply({"success":false,"message":"ali return fail"});
-															}
-															if (!vip) {
-																return reply({"success":false,"message":"vip return fail"});
-															}
-															if (!cash) {
-																return reply({"success":false,"message":"cash return fail"});
-															}
-
-															var instruction = {
-																"shipper" : "shantao",
-																"supplier_id" : 1,
-																"warehouse_id" : 1,
-																"region_id" : 1,
-																"point_id" : 1
-															}
-															var info = {
-																"product_id" : product,
-																"industry_id" : 102,
-																"instruction" : JSON.stringify(instruction),
-																"strategy" : "in",
-																"quantity" : number,
-																"batch_id" : "test",
-																"platform_code" :"drp_admin"
+								server.plugins['models'].orders.search_return_order(order_id,function(err,results){
+									if (!err) {
+										var index = results.length +1;
+										server.plugins['models'].orders.save_pos_return(order_id,total_price,index,function(err,results){
+											if (results.affectedRows>0) {
+												for (var i = 0; i < product_ids.length; i++) {
+													var product = product_ids[i];
+													var number = number_list[i];
+													server.plugins['models'].order_details.save_return_details(order_id,product,number,function(err,results){
+														if (results.affectedRows>0) {
+															var data = {
+																"order_id":order_id,
+																"sob_id": "ioio",
+																"platform_code" : "drp_pos",
+																"address": "上海",
+																"operator":1,
+																"main_role_id":1
 															};
-															save_stock_instruction(info,function(err,content){
-																if (!err) {
 
-																}else {
-																	return reply({"success":false,"message":content.memessage});
-																}
+															var ep =  eventproxy.create("ali","vip","cash",
+																function(ali,vip,cash){
+																	if (!ali) {
+																		return reply({"success":false,"message":"ali return fail"});
+																	}
+																	if (!vip) {
+																		return reply({"success":false,"message":"vip return fail"});
+																	}
+																	if (!cash) {
+																		return reply({"success":false,"message":"cash return fail"});
+																	}
+
+																	var instruction = {
+																		"shipper" : "shantao",
+																		"supplier_id" : 1,
+																		"warehouse_id" : 1,
+																		"region_id" : 1,
+																		"point_id" : 1
+																	}
+																	var info = {
+																		"product_id" : product,
+																		"industry_id" : 102,
+																		"instruction" : JSON.stringify(instruction),
+																		"strategy" : "in",
+																		"quantity" : number,
+																		"batch_id" : "test",
+																		"platform_code" :"drp_admin"
+																	};
+																	save_stock_instruction(info,function(err,content){
+																		if (!err) {
+
+																		}else {
+																			return reply({"success":false,"message":content.memessage});
+																		}
+																	});
 															});
-													});
 
-													if (ali_pay!=0) {
-														data.pay_amount = ali_pay;
-														alipay_trade_refund(data,function(err,rows){
-															if (!err) {
+															if (ali_pay!=0) {
+																data.pay_amount = ali_pay;
+																alipay_trade_refund(data,function(err,rows){
+																	if (!err) {
+																		ep.emit("ali", true);
+																	}else {
+																		ep.emit("ali", false);
+																	}
+																});
+															}else {
 																ep.emit("ali", true);
-															}else {
-																ep.emit("ali", false);
 															}
-														});
-													}else {
-														ep.emit("ali", true);
-													}
 
-													if (member_pay!=0) {
-														data.pay_amount = member_pay;
-														vip_card_refund(data,function(err,row){
-															if (!err) {
+															if (member_pay!=0) {
+																data.pay_amount = member_pay;
+																vip_card_refund(data,function(err,row){
+																	if (!err) {
+																		ep.emit("vip", true);
+																	}else {
+																		ep.emit("vip", false);
+																	}
+																});
+															}else {
 																ep.emit("vip", true);
-															}else {
-																ep.emit("vip", false);
 															}
-														});
-													}else {
-														ep.emit("vip", true);
-													}
 
-													if (cash!=0) {
-														data.pay_amount = cash;
-														order_cash_refund(data,function(err,row){
-															if (!err) {
+															if (cash!=0) {
+																data.pay_amount = cash;
+																order_cash_refund(data,function(err,row){
+																	if (!err) {
+																		ep.emit("cash", true);
+																	}else {
+																		ep.emit("cash", false);
+																	}
+																});
+															}else {
 																ep.emit("cash", true);
-															}else {
-																ep.emit("cash", false);
 															}
-														});
-													}else {
-														ep.emit("cash", true);
-													}
 
-												}else {
-													return reply({"success":false,"message":results.message});
+														}else {
+															return reply({"success":false,"message":results.message});
+														}
+													});
 												}
-											});
-										}
-										return reply({"success":true});
+												return reply({"success":true});
+											}else {
+												return reply({"success":false,"message":results.message});
+											}
+										});
 									}else {
 										return reply({"success":false,"message":results.message});
 									}
