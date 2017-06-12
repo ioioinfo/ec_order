@@ -311,6 +311,28 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
+		//查询订单是否存在
+		{
+			method: 'GET',
+			path: '/find_pos_order',
+			handler: function(request, reply){
+				var order_id = request.query.order_id;
+				if (!order_id) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				search_order(order_id,function(err, results){
+					if (!err) {
+						if (results.length>0) {
+							return reply({"success":true,"rows":results,"service_info":service_info});
+						}else {
+							return reply({"success":false,"message":"order_id not exist","service_info":service_info});
+						}
+					}else {
+						return reply({"success":false,"message":results.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 		//查询订单,及订详细
 		{
 			method: 'GET',
@@ -528,7 +550,7 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
-        
+
         //得到所有订单
 		{
 			method: 'GET',

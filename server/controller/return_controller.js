@@ -48,7 +48,33 @@ var find_products_with_picture = function(product_ids,cb){
 	var url = "http://127.0.0.1:18002/find_products_with_picture?product_ids="+product_ids;
 	do_get_method(url,cb);
 };
+//阿里支付退款
+var alipay_trade_refund = function(data,cb){
+	var url = "http://139.196.148.40:18008/alipay_trade_refund";
+	do_post_method(url,data,cb);
+}
+//会员退款
+var vip_card_refund = function(data,cb){
+	var url = "http://139.196.148.40:18008/vip_card_refund";
+	do_post_method(url,data,cb);
+}
+//现金退款
+var order_cash_refund = function(data,cb){
+	var url = "http://139.196.148.40:18008/order_cash_refund";
+	do_post_method(url,data,cb);
+}
+//保存库存
+var save_stock_instruction = function(data,cb){
+	var url = "http://211.149.248.241:12001/save_stock_instruction";
+	do_post_method(url,data,cb);
+};
 exports.register = function(server, options, next){
+	//查询订单详细
+	var search_order_details = function(order_id,cb){
+		server.plugins['models'].order_details.search_order_details(order_id,function(err,results){
+			cb(err,results);
+		});
+	};
 	//查询ec  单条order信息
 	var get_ec_order = function(order_id,cb){
 		server.plugins['models'].products_ec_orders.get_ec_order(order_id,function(err,results){
@@ -56,6 +82,8 @@ exports.register = function(server, options, next){
 		});
 	};
 	server.route([
+		//线上
+
 		//退单完成 finish_return_order
 		{
 			method: 'POST',
@@ -335,6 +363,184 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
+		//线下 退款
+		{
+			method: 'POST',
+			path: '/return_pos_order',
+			handler: function(request, reply){
+				var order_id = request.payload.order_id;
+				if (!order_id) {
+					return reply({"success":false,"message":"order_id null"});
+				}
+				var cash = 0;
+				if (request.payload.cash) {
+					cash = parseFloat(request.payload.cash);
+				}
+				var ali_pay = 0;
+				if (request.payload.ali_pay) {
+					ali_pay = parseFloat(request.payload.ali_pay);
+				}
+				var member_pay = 0;
+				if (request.payload.member_pay) {
+					member_pay = parseFloat(request.payload.member_pay);
+				}
+				var total_price = cash + ali_pay + member_pay;
+				if (total_price == 0) {
+					return reply({"success":false,"message":"退款金额不能为空"});
+				}
+				var product_ids = request.payload.product_ids;
+				if (!product_ids) {
+					return reply({"success":false,"message":"没有退款商品"});
+				}
+				var number_list = request.payload.number_list;
+				if (!number_list) {
+					return reply({"success":false,"message":"数量"});
+				}
+				server.plugins['models'].orders.search_order(order_id,function(err,results){
+					if (!err) {
+						if (results.length==0) {
+							return reply({"success":false,"message":"订单不存在！"});
+						}
+						var actual_price = results[0].actual_price;
+						if (total_price > actual_price) {
+							return reply({"success":false,"message":"退款金额不能超过订单实际支付金额"});
+						}
+						search_order_details(order_id,function(err, rows){
+							if (!err) {
+								if (rows.length==0) {
+									return reply({"success":false,"message":"订单没有商品！"});
+								}
+								var product_map = {};
+								for (var i = 0; i < rows.length; i++) {
+									product_map[rows[i].product_id] = rows[i].number;
+								}
+								product_ids = JSON.parse(product_ids);
+								number_list = JSON.parse(number_list);
+								for (var i = 0; i < product_ids.length; i++) {
+									if (!product_map[product_ids[i]]) {
+										return reply({"success":false,"message":"商品id:"+product_ids[i]+"不存在"});
+									}else {
+										if (product_map[product_ids[i]]<number_list[i]) {
+											return reply({"success":false,"message":"商品id:"+product_ids[i]+"退货数量不对"});
+										}
+									}
+								}
+								server.plugins['models'].orders.save_pos_return(order_id,total_price,function(err,results){
+									if (results.affectedRows>0) {
+										for (var i = 0; i < product_ids.length; i++) {
+											var product = product_ids[i];
+											var number = number_list[i];
+											server.plugins['models'].order_details.save_return_details(order_id,product,number,function(err,results){
+												if (results.affectedRows>0) {
+													var data = {
+														"order_id":order_id,
+														"sob_id": "ioio",
+														"platform_code" : "drp_pos",
+														"address": "上海",
+														"operator":1,
+														"main_role_id":1
+													};
+
+													var ep =  eventproxy.create("ali","vip","cash",
+														function(ali,vip,cash){
+															if (!ali) {
+																return reply({"success":false,"message":"ali return fail"});
+															}
+															if (!vip) {
+																return reply({"success":false,"message":"vip return fail"});
+															}
+															if (!cash) {
+																return reply({"success":false,"message":"cash return fail"});
+															}
+
+															var instruction = {
+																"shipper" : "shantao",
+																"supplier_id" : 1,
+																"warehouse_id" : 1,
+																"region_id" : 1,
+																"point_id" : 1
+															}
+															var info = {
+																"product_id" : product,
+																"industry_id" : 102,
+																"instruction" : JSON.stringify(instruction),
+																"strategy" : "in",
+																"quantity" : number,
+																"batch_id" : "test",
+																"platform_code" :"drp_admin"
+															};
+															save_stock_instruction(info,function(err,content){
+																if (!err) {
+
+																}else {
+																	return reply({"success":false,"message":content.memessage});
+																}
+															});
+													});
+
+													if (ali_pay!=0) {
+														data.pay_amount = ali_pay;
+														alipay_trade_refund(data,function(err,rows){
+															if (!err) {
+																ep.emit("ali", true);
+															}else {
+																ep.emit("ali", false);
+															}
+														});
+													}else {
+														ep.emit("ali", true);
+													}
+
+													if (member_pay!=0) {
+														data.pay_amount = member_pay;
+														vip_card_refund(data,function(err,row){
+															if (!err) {
+																ep.emit("vip", true);
+															}else {
+																ep.emit("vip", false);
+															}
+														});
+													}else {
+														ep.emit("vip", true);
+													}
+
+													if (cash!=0) {
+														data.pay_amount = cash;
+														order_cash_refund(data,function(err,row){
+															if (!err) {
+																ep.emit("cash", true);
+															}else {
+																ep.emit("cash", false);
+															}
+														});
+													}else {
+														ep.emit("cash", true);
+													}
+
+												}else {
+													return reply({"success":false,"message":results.message});
+												}
+											});
+										}
+										return reply({"success":true});
+									}else {
+										return reply({"success":false,"message":results.message});
+									}
+								});
+							}else {
+								return reply({"success":false,"message":"search order_details fail","service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":results.message});
+					}
+				});
+
+
+			}
+		},
+
+
 
 	]);
 
