@@ -4,7 +4,7 @@ var EventProxy = require('eventproxy');
 var order_details = function(server) {
 	return {
 		//保存退单明细
-		save_return_details: function(order_id, product_id, num, cb) {
+		save_return_details: function(order_id, product_id, num,id, cb) {
 			var query = `insert into order_details (id, order_id, product_id, number,
 			price, discount, total_price, discount_price, created_at, updated_at, flag)
 
@@ -12,7 +12,6 @@ var order_details = function(server) {
 			price, discount, total_price, discount_price, now(),now(),0
 			from order_details where order_id = ? and product_id = ?
 			` ;
-			var id = order_id + "_1";
 			var columns = [id,product_id,num,order_id,product_id];
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {

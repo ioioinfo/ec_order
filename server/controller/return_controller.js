@@ -484,10 +484,11 @@ exports.register = function(server, options, next){
 										var index = results.length +1;
 										server.plugins['models'].orders.save_pos_return(order_id,total_price,index,function(err,results){
 											if (results.affectedRows>0) {
+												var id = results.id;
 												for (var i = 0; i < product_ids.length; i++) {
 													var product = product_ids[i];
 													var number = number_list[i];
-													server.plugins['models'].order_details.save_return_details(order_id,product,number,function(err,results){
+													server.plugins['models'].order_details.save_return_details(order_id,product,number,id,function(err,results){
 														if (results.affectedRows>0) {
 															var data = {
 																"order_id":order_id,

@@ -44,6 +44,7 @@ var orders = function(server) {
 						cb(true,results);
 						return;
 					}
+					results.id = id;
 					cb(false,results);
 				});
 			});
