@@ -400,6 +400,9 @@ exports.register = function(server, options, next){
 			handler: function(request, reply){
 				server.plugins['models'].poor_orders.get_poor_orders(function(err,rows){
 					if (!err) {
+						if (rows.length==0) {
+							return reply({"success":true,"rows":[],"service_info":service_info});
+						}
 						var order_ids = [];
 						for (var i = 0; i < rows.length; i++) {
 							order_ids.push(rows[i].order_id);
