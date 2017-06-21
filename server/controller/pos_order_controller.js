@@ -644,8 +644,25 @@ exports.register = function(server, options, next){
 						server.plugins['models'].order_details.search_orders_details(order_ids,function(err,rows){
 							if (!err) {
 								var prducts_num = 0;
+								var order_map = {};
 								for (var i = 0; i < rows.length; i++) {
 									prducts_num = prducts_num + rows[i].number;
+								}
+								details_map = {};
+								for (var i = 0; i < rows.length; i++) {
+									var row = rows[i];
+									if (!details_map[row.order_id]) {
+										details_map[row.order_id] = 0;
+									}
+									details_map[row.order_id] = details_map[row.order_id] + row.number;
+								}
+								for (var i = 0; i < results.length; i++) {
+									var result = results[i];
+									if (!order_map[result.order_id]) {
+										order_map[result.order_id] = 0;
+									}
+									order_map[result.order_id] = order_map[result.order_id] + details_map[result.order_id];
+									result.num = order_map[result.order_id];
 								}
 								return reply({"success":true,"prducts_num":prducts_num,"rows":results,"service_info":service_info});
 							}else {
