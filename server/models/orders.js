@@ -118,7 +118,11 @@ var orders = function(server) {
 				query = query + " and order_id = ? ";
 				colums.push(params.order_id);
 			}
-			query = query +" order by order_date desc";
+			if (params.sort.dir) {
+				query = query +" order by order_date "+ params.sort.dir;
+			}else {
+				query = query +" order by order_date desc";
+			}
 			if (params.thisPage) {
 				var offset = params.thisPage-1;
 				if (params.everyNum) {
@@ -147,6 +151,7 @@ var orders = function(server) {
 				query = query + " and order_id = ? ";
 				colums.push(params.order_id);
 			}
+			
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query,colums, function(err, results) {
 					connection.release();

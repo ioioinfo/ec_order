@@ -98,7 +98,13 @@ var ec_orders = function(server) {
 				query = query + " and order_status in (?) ";
 				colums.push(params.status);
 			}
-			query = query +" order by created_at desc";
+
+			if (params.sort.dir) {
+				query = query +" order by created_at "+ params.sort.dir;
+			}else {
+				query = query +" order by created_at desc";
+			}
+			
 			if (params.thisPage) {
 				var offset = params.thisPage-1;
 				if (params.everyNum) {
