@@ -118,7 +118,11 @@ var orders = function(server) {
 				query = query + " and order_id = ? ";
 				colums.push(params.order_id);
 			}
-			if (params.sort.dir) {
+			if (params.product_id) {
+				query = query + " and exists (select 1 from order_details where product_id=? and order_id = orders.order_id) ";
+				colums.push(params.product_id);
+			}
+			if (params.sort && params.sort.dir) {
 				query = query +" order by order_date "+ params.sort.dir;
 			}else {
 				query = query +" order by order_date desc";
@@ -151,7 +155,7 @@ var orders = function(server) {
 				query = query + " and order_id = ? ";
 				colums.push(params.order_id);
 			}
-			
+
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query,colums, function(err, results) {
 					connection.release();
