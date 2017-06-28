@@ -99,12 +99,12 @@ var ec_orders = function(server) {
 				colums.push(params.status);
 			}
 
-			if (params.sort.dir) {
+			if (params.sort && params.sort.dir) {
 				query = query +" order by created_at "+ params.sort.dir;
 			}else {
 				query = query +" order by created_at desc";
 			}
-			
+
 			if (params.thisPage) {
 				var offset = params.thisPage-1;
 				if (params.everyNum) {

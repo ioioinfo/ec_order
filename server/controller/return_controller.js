@@ -235,7 +235,6 @@ exports.register = function(server, options, next){
 				}
                 server.plugins['models'].return_orders_details.search_return_list(person_id,function(err,results){
                     if (!err) {
-						console.log("results:"+JSON.stringify(results));
 						if (results.length == 0) {
 							reply({"success":true,"message":"ok","rows":[],"products":{},"service_info":service_info});
 						}
@@ -493,96 +492,95 @@ exports.register = function(server, options, next){
 													var number = number_list[i];
 													server.plugins['models'].order_details.save_return_details(order_id,product,number,id,function(err,results){
 														if (results.affectedRows>0) {
-															var data = {
-																"order_id":order_id,
-																"sob_id": "ioio",
-																"platform_code" : "drp_pos",
-																"address": "上海",
-																"operator":1,
-																"main_role_id":1
+															var instruction = {
+																"shipper" : "shantao",
+																"supplier_id" : 1,
+																"warehouse_id" : 1,
+																"region_id" : 1,
+																"point_id" : 1
+															}
+															var info = {
+																"product_id" : product,
+																"industry_id" : 102,
+																"instruction" : JSON.stringify(instruction),
+																"strategy" : "in",
+																"quantity" : number,
+																"batch_id" : "test",
+																"platform_code" :"drp_admin"
 															};
+															save_stock_instruction(info,function(err,content){
+																if (!err) {
 
-															var ep =  eventproxy.create("ali","vip","cash",
-																function(ali,vip,cash){
-																	if (!ali) {
-																		return reply({"success":false,"message":"ali return fail"});
-																	}
-																	if (!vip) {
-																		return reply({"success":false,"message":"vip return fail"});
-																	}
-																	if (!cash) {
-																		return reply({"success":false,"message":"cash return fail"});
-																	}
-
-																	var instruction = {
-																		"shipper" : "shantao",
-																		"supplier_id" : 1,
-																		"warehouse_id" : 1,
-																		"region_id" : 1,
-																		"point_id" : 1
-																	}
-																	var info = {
-																		"product_id" : product,
-																		"industry_id" : 102,
-																		"instruction" : JSON.stringify(instruction),
-																		"strategy" : "in",
-																		"quantity" : number,
-																		"batch_id" : "test",
-																		"platform_code" :"drp_admin"
-																	};
-																	save_stock_instruction(info,function(err,content){
-																		if (!err) {
-
-																		}else {
-																			return reply({"success":false,"message":content.memessage});
-																		}
-																	});
+																}else {
+																	return reply({"success":false,"message":content.memessage});
+																}
 															});
-
-															if (ali_pay!=0) {
-																data.pay_amount = ali_pay;
-																alipay_trade_refund(data,function(err,rows){
-																	if (!err) {
-																		ep.emit("ali", true);
-																	}else {
-																		ep.emit("ali", false);
-																	}
-																});
-															}else {
-																ep.emit("ali", true);
-															}
-
-															if (member_pay!=0) {
-																data.pay_amount = member_pay;
-																vip_card_refund(data,function(err,row){
-																	if (!err) {
-																		ep.emit("vip", true);
-																	}else {
-																		ep.emit("vip", false);
-																	}
-																});
-															}else {
-																ep.emit("vip", true);
-															}
-
-															if (cash!=0) {
-																data.pay_amount = cash;
-																order_cash_refund(data,function(err,row){
-																	if (!err) {
-																		ep.emit("cash", true);
-																	}else {
-																		ep.emit("cash", false);
-																	}
-																});
-															}else {
-																ep.emit("cash", true);
-															}
-
 														}else {
 															return reply({"success":false,"message":results.message});
 														}
 													});
 												}
+												var data = {
+													"order_id":order_id+"_"+index,
+													"sob_id": "ioio",
+													"platform_code" : "drp_pos",
+													"address": "上海",
+													"operator":1,
+													"main_role_id":1
+												};
+
+												var ep =  eventproxy.create("ali","vip","cash",
+													function(ali,vip,cash){
+														if (!ali) {
+															return reply({"success":false,"message":"ali return fail"});
+														}
+														if (!vip) {
+															return reply({"success":false,"message":"vip return fail"});
+														}
+														if (!cash) {
+															return reply({"success":false,"message":"cash return fail"});
+														}
+												});
+
+												if (ali_pay!=0) {
+													data.pay_amount = ali_pay;
+													alipay_trade_refund(data,function(err,rows){
+														if (!err) {
+															ep.emit("ali", true);
+														}else {
+															ep.emit("ali", false);
+														}
+													});
+												}else {
+													ep.emit("ali", true);
+												}
+
+												if (member_pay!=0) {
+													data.pay_amount = member_pay;
+													vip_card_refund(data,function(err,row){
+														if (!err) {
+															ep.emit("vip", true);
+														}else {
+															ep.emit("vip", false);
+														}
+													});
+												}else {
+													ep.emit("vip", true);
+												}
+
+												if (cash!=0) {
+													data.pay_amount = cash;
+													order_cash_refund(data,function(err,row){
+														if (!err) {
+															ep.emit("cash", true);
+														}else {
+															ep.emit("cash", false);
+														}
+													});
+												}else {
+													ep.emit("cash", true);
+												}
+
 												return reply({"success":true});
 											}else {
 												return reply({"success":false,"message":results.message});
