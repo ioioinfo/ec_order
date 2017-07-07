@@ -522,6 +522,7 @@ exports.register = function(server, options, next){
 												}
 												var data = {
 													"order_id":order_id+"_"+index,
+													"orign_order_id":order_id,
 													"sob_id": "ioio",
 													"platform_code" : "drp_pos",
 													"address": "上海",
