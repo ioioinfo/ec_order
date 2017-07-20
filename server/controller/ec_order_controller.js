@@ -1,6 +1,7 @@
 // Base routes for item..
 const uu_request = require('../utils/uu_request');
 const uuidV1 = require('uuid/v1');
+var async = require('async');
 var eventproxy = require('eventproxy');
 var service_info = "ec order service";
 var order_status = {
@@ -1020,13 +1021,139 @@ exports.register = function(server, options, next){
 		//保存订单表
 		{
 			method: 'POST',
-			path: '/save_order_infos',
+			path: '/save_order_infos2',
 			handler: function(request, reply){
 				var person_id = request.payload.person_id;
 				var total_data = request.payload.total_data;
 				var shopping_carts = request.payload.shopping_carts;
 				var send_seller = request.payload.send_seller;
 				var address = request.payload.address;
+				var logistics_total = request.payload.logistics_total;
+				if (!person_id || !total_data || !shopping_carts) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				shopping_carts = JSON.parse(shopping_carts);
+				total_data = JSON.parse(total_data);
+				logistics_total = JSON.parse(logistics_total);
+				var ids = [];
+				for (var i = 0; i < shopping_carts.length; i++) {
+					ids.push(shopping_carts[i].id);
+				}
+				ids = JSON.stringify(ids);
+				//根据页面的购物车对象中的id查询数据库的购物车和产品信息
+				var data_base_carts;
+				var data_base_total_data;
+				var data_base_products;
+				search_selected_carts(person_id,ids,function(err,results){
+					if (!err) {
+						data_base_carts = results.shopping_carts;
+						data_base_products = results.products;
+						data_base_total_data = results.total_data;
+						//和页面传的购物车里信息核实
+						for (var i = 0; i < shopping_carts.length; i++) {
+							var per_price = shopping_carts[i].per_price;
+							//商品单价对比
+							if (shopping_carts[i].product_id == data_base_products[shopping_carts[i].product_id].id) {
+								if (per_price != data_base_products[shopping_carts[i].product_id].product_sale_price) {
+									return reply({"success":false,"message":"商品价格有问题！"});
+								}
+							}
+						}
+						//商品总数，总价对比
+						if (total_data.acount.prices_all != data_base_total_data.total_prices ) {
+							return reply({"success":false,"message":"商品总价有问题！"});
+						}
+						if (total_data.acount.items_all != data_base_total_data.total_items) {
+							return reply({"success":false,"message":"商品总数量有问题！"});
+						}
+						//details data
+						var products = data_base_products;
+						var address = request.payload.address;
+						var save_fail = [];
+						var save_success = [];
+						async.eachLimit(total_data.mendian,1, function(mendian, cb) {
+
+							var gain_point = total_data.total_prices[mendian];
+							var products_price = total_data.total_prices[mendian];
+							var total_number = total_data.total_items[mendian];
+							var weight = total_data.total_weight[mendian];
+							var type = logistics_total[mendian];
+							if (!weight) {
+								weight = 0;
+							}
+							var logistics_price = total_data.lgtic_pay[mendian];
+							if (!logistics_price) {
+								logistics_price = 0;
+							}
+							var actual_price = logistics_price + products_price;
+							console.log("total_data:"+JSON.stringify(total_data));
+							var origin = "ec_mp";
+							var store_name = mendian;
+
+							generate_order_no("ec_order",function(err,row){
+								if (!err) {
+									var id = uuidV1();
+									var order_id = row.order_no;
+									var order_status = -1;
+									server.plugins['models'].ec_orders.save_order_infos(id,order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller,address,store_name,type,function(err,results){
+										if (!err){
+											for (var i = 0; i < shopping_carts.length; i++) {
+												var product_id = shopping_carts[i].product_id;
+												var order_index = i+1;
+												var number = shopping_carts[i].total_items;
+												var price = products[shopping_carts[i].product_id].product_sale_price;
+												var marketing_price = products[shopping_carts[i].product_id].product_marketing_price;
+												var total_price = price * number;
+												var sku_id = shopping_carts[i].sku_id;
+												server.plugins['models'].ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,sku_id,function(err,results){
+													if (!err){
+														save_success.push(mendian);
+													}else {
+														console.log(results.message);
+														save_fail.push(mendian);
+													}
+												});
+											}
+											cb();
+										}else {
+											console.log(results.message);
+											save_fail.push(mendian);
+											cb();
+										}
+									});
+								}else {
+									console.log(row.message);
+									save_fail.push(mendian);
+									cb();
+								}
+							});
+
+						}, function(err) {
+							return reply({"success":true,"success_num":save_success.length,"service_info":service_info,"save_fail":save_fail,"fail_num":save_fail.length,"message":"err"});
+						});
+
+						delete_shopping_carts(ids,function(err,content){
+							if (!err) {
+
+							}else {
+								return reply({"success":false,"message":results.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":"购物车查不到"});
+					}
+				});
+			}
+		},
+		//保存订单，分单
+		{
+			method: 'POST',
+			path: '/save_order_infos',
+			handler: function(request, reply){
+				var person_id = request.payload.person_id;
+				var total_data = request.payload.total_data;
+				var shopping_carts = request.payload.shopping_carts;
+				var send_seller = request.payload.send_seller;
 				var id = request.payload.id;
 				if (!person_id || !total_data || !shopping_carts) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
