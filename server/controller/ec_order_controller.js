@@ -1098,6 +1098,7 @@ exports.register = function(server, options, next){
 								if (!err) {
 									var id = uuidV1();
 									var order_id = row.order_no;
+									save_success.push(order_id);
 									var order_status = -1;
 									server.plugins['models'].ec_orders.save_order_infos2(id,order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller,address,store_name,type,function(err,results){
 										if (!err){
@@ -1111,7 +1112,7 @@ exports.register = function(server, options, next){
 												var sku_id = shopping_carts[i].sku_id;
 												server.plugins['models'].ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,sku_id,function(err,results){
 													if (!err){
-														save_success.push(mendian);
+
 													}else {
 														console.log(results.message);
 														save_fail.push(mendian);
@@ -1133,7 +1134,10 @@ exports.register = function(server, options, next){
 							});
 
 						}, function(err) {
-							return reply({"success":true,"success_num":save_success.length,"service_info":service_info,"save_fail":save_fail,"fail_num":save_fail.length,"message":"err"});
+							if (err) {
+								console.error("err: " + err);
+							}
+							return reply({"success":true,"success_num":save_success.length,"ids":save_success,"fail_num":save_fail.length,"service_info":service_info});
 						});
 
 						delete_shopping_carts(ids,function(err,content){
@@ -1239,6 +1243,7 @@ exports.register = function(server, options, next){
 													var sku_id = shopping_carts[i].sku_id;
 													server.plugins['models'].ec_orders_details.save_ec_order_details(order_id,product_id,order_index,number,price,marketing_price,total_price,sku_id,function(err,results){
 														if (!err){
+
 														}else {
 															return reply({"success":false,"message":results.message,"service_info":service_info});
 														}
