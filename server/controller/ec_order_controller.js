@@ -1049,6 +1049,10 @@ exports.register = function(server, options, next){
 						data_base_carts = results.shopping_carts;
 						data_base_products = results.products;
 						data_base_total_data = results.total_data;
+						//是否存在选择商品
+						if (data_base_carts.length==0) {
+							return reply({"success":false,"message":"没有选择商品在购物车里"});
+						}
 						//和页面传的购物车里信息核实
 						for (var i = 0; i < shopping_carts.length; i++) {
 							var per_price = shopping_carts[i].per_price;
@@ -1095,7 +1099,7 @@ exports.register = function(server, options, next){
 									var id = uuidV1();
 									var order_id = row.order_no;
 									var order_status = -1;
-									server.plugins['models'].ec_orders.save_order_infos(id,order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller,address,store_name,type,function(err,results){
+									server.plugins['models'].ec_orders.save_order_infos2(id,order_id,person_id,gain_point,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller,address,store_name,type,function(err,results){
 										if (!err){
 											for (var i = 0; i < shopping_carts.length; i++) {
 												var product_id = shopping_carts[i].product_id;
@@ -1154,6 +1158,7 @@ exports.register = function(server, options, next){
 				var total_data = request.payload.total_data;
 				var shopping_carts = request.payload.shopping_carts;
 				var send_seller = request.payload.send_seller;
+				var address = request.payload.address;
 				var id = request.payload.id;
 				if (!person_id || !total_data || !shopping_carts) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
