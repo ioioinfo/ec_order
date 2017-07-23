@@ -77,7 +77,7 @@ var ec_orders = function(server) {
 				total_number,logistics_price,actual_price,send_seller,weight,
 				linkname,detail_address,mobile,province,city,district,cancel_reason,
 				products_price,order_date,order_status,store_id,pay_way,created_at,
-				DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S') order_date_text
+				DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S') order_date_text,store_name
 				from ec_orders
 				where flag =0
 			`;
