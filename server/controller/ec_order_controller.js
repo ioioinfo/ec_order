@@ -641,7 +641,7 @@ exports.register = function(server, options, next){
 							"store_id" : JSON.parse(address).store_id,
 							"point_id" : JSON.parse(address).point_id,
 							"weight" : weight,
-							"order_amount" : total_number,
+							"order_amount" : products_price,
 							"end_province" :JSON.parse(address).province,
 							"end_city" : JSON.parse(address).city,
 							"end_district" : JSON.parse(address).district
@@ -1213,7 +1213,7 @@ exports.register = function(server, options, next){
 							"store_id" : JSON.parse(address).store_id,
 							"point_id" : JSON.parse(address).point_id,
 							"weight" : weight,
-							"order_amount" : total_number,
+							"order_amount" : products_price,
 							"end_province" :JSON.parse(address).province,
 							"end_city" : JSON.parse(address).city,
 							"end_district" : JSON.parse(address).district
