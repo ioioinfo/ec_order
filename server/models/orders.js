@@ -74,8 +74,8 @@ var orders = function(server) {
 		},
 		//更新订单状态
 		update_order_status: function(order_id,order_status,changes,ready_pay,cb){
-			var query = "update orders set order_status =?, changes =?,ready_pay=? where order_id =?"
-			var columns = [order_status,changes,ready_pay,order_id];
+			var query = "update orders set order_status =?, changes =?,ready_pay=? where order_id =? and order_status !=?"
+			var columns = [order_status,changes,ready_pay,order_id,order_status];
 			console.log(columns);
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {
