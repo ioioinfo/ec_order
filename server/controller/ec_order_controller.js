@@ -1274,6 +1274,41 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
+		//充值订单列表
+		{
+			method: 'GET',
+			path: '/get_recharge_orders',
+			handler: function(request, reply){
+				var params = request.query.params;
+				if (!params) {
+					params = {};
+				}else {
+					params = JSON.parse(params);
+				}
+
+				server.plugins['models'].recharge_order.get_recharge_orders(params,function(err,results){
+					if (!err) {
+						var orders = results;
+						if (orders.length>0) {
+							server.plugins['models'].recharge_order.recharge_orders_count(params,function(err,results){
+								if (!err) {
+									var num = results[0].num;
+									return reply({"success":true,"message":"ok","rows":orders,"num":num,"service_info":service_info});
+								}else {
+									return reply({"success":false,"message":results.message,"service_info":service_info});
+								}
+							});
+						}else {
+							reply({"success":true,"message":"ok","orders":orders,"num":0,"service_info":service_info});
+						}
+					}else {
+						return reply({"success":false,"message":results.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+
+
 
 	]);
 
