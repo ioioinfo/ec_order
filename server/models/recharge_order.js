@@ -63,7 +63,7 @@ var recharge_order = function(server) {
 				marketing_price, actual_price, serial_number, pay_way,
 				pay_date, order_status, DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S')created_at
 				from recharge_order
-				where flag =0
+				where flag =0 order by created_at desc
 			`;
 			var colums=[];
 			if (params.order_id) {

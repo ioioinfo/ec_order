@@ -774,7 +774,7 @@ exports.register = function(server, options, next){
 								}
 							});
 						}else {
-							reply({"success":true,"message":"ok","orders":orders,"num":0,"service_info":service_info});
+							reply({"success":true,"message":"ok","rows":orders,"num":0,"service_info":service_info});
 						}
 					}else {
 						return reply({"success":false,"message":results.message,"service_info":service_info});
