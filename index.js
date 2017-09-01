@@ -1,4 +1,4 @@
-﻿var Hapi = require('hapi');
+var Hapi = require('hapi');
 // Create a server with a host and port
 var server = new Hapi.Server();
 
@@ -46,10 +46,10 @@ module.exports = server;
     Second: project specific plugins are loaded
  */
 server.register([
-	{
+    {
         register: require("good"),
         options: {
-            ops: {interval: 5000},
+            ops: false,
             reporters: {
                 myConsoleReporter: [{
                     module: 'good-console'
@@ -60,24 +60,24 @@ server.register([
     {
       register: require('./server/db/db_mysql.js')
     },
-	{
+    {
       register: require('./server/assets/index.js')
     },
-	{
-	  register: require('./server/controller/pos_order_controller.js')
-	},
-	{
-	  register: require('./server/models/models.js')
-	},
-	{
-	  register: require('./server/controller/ec_order_controller.js')
-	},
-	{
-	  register: require('./server/controller/logistics_controller.js')
-	},
     {
-	  register: require('./server/controller/return_controller.js')
-	},
+      register: require('./server/controller/pos_order_controller.js')
+    },
+    {
+      register: require('./server/models/models.js')
+    }, {
+      register: require('./server/controller/index_controller.js')
+    }, {
+      register: require('./server/controller/ec_order_controller.js')
+    }, {
+      register: require('./server/controller/logistics_controller.js')
+    },
+    {
+      register: require('./server/controller/return_controller.js')
+    },
 
 ], function () {
     //Start the server
