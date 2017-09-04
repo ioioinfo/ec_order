@@ -22,12 +22,13 @@ var poor_orders = function(server) {
             });
         },
 		//查询
-		get_poor_orders :  function(cb){
+		get_poor_orders :  function(params, cb){
 			var query = `select id, order_id from poor_orders
 				where flag = 0
 			`;
+			var colums = [];
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
-				connection.query(query, function(err, results) {
+				connection.query(query, colums, function(err, results) {
 					connection.release();
 					if (err) {
 						console.log(err);
@@ -38,6 +39,29 @@ var poor_orders = function(server) {
 				});
 			});
 		},
+		poor_orders_count : function(params,cb){
+			var query = `select count(1) num
+				from poor_orders
+				where flag =0
+			`;
+			var colums=[];
+
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query,colums, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,null);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
+
+
+
+
 
 	};
 };
