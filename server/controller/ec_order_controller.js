@@ -223,7 +223,26 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
-		//批量查明细
+		//批量查明细 简单版
+		{
+			method: 'GET',
+			path: '/get_orders_infos',
+			handler: function(request, reply){
+				var order_ids = request.query.order_ids;
+				if (!order_ids) {
+					return reply({"success":false,"message":"订单不符合要求","service_info":service_info});
+				}
+				order_ids = JSON.parse(order_ids);
+				server.plugins['models'].ec_orders_details.search_ec_order_details(order_ids,function(err,rows){
+					if (!err) {
+						return reply({"success":true,"rows":rows,"service_info":service_info});
+					}else {
+						return reply({"success":false,"message":rows.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+		//批量查明细 完整版，带订单，带产品
 		{
 			method: 'GET',
 			path: '/search_orders_infos',
