@@ -255,18 +255,18 @@ var ec_orders = function(server) {
 			var city = address.city;
 			var district = address.district;
 			var type = address.type;
-
+			var store_name = address.mendians_list[0];
 			var query = `insert into ec_orders(id, order_id, person_id, gain_point,
 				linkname,detail_address,mobile,province,city,district,type,
 				products_price, total_number, weight, order_status, origin, logistics_price,
-				actual_price, send_seller,created_at,updated_at, flag)
+				actual_price, send_seller,created_at,updated_at,flag,store_name)
 				values
 				(?,?,?,?,
 				?,?,?,?,?,?,?,
 				?,?,?,?,?,?,
-				?,?,now(),now(),0)` ;
-			console.log(query);
-			var columns=[id,order_id,person_id,gain_point,linkname,detail_address,mobile,province,city,district,type,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller];
+				?,?,now(),now(),0,?)` ;
+				
+			var columns=[id,order_id,person_id,gain_point,linkname,detail_address,mobile,province,city,district,type,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller,store_name];
 			console.log("columns:"+columns);
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {
