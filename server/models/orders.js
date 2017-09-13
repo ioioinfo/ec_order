@@ -91,7 +91,7 @@ var orders = function(server) {
 		},
 		//查询订单
 		search_order: function(order_id,cb){
-			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,
+			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,vip_id,
 				actual_price,order_date,DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text,order_status,store_id,pos_id
 				from orders
 				where order_id =? and flag =0 order by order_date desc
