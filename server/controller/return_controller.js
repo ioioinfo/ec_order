@@ -503,7 +503,7 @@ exports.register = function(server, options, next){
 								server.plugins['models'].orders.search_return_order(order_id,function(err,results){
 									if (!err) {
 										var index = results.length +1;
-										server.plugins['models'].orders.save_pos_return(order_id,total_price,index,function(err,results){
+										server.plugins['models'].orders.save_pos_return(order_id,total_price,index,vip_id,function(err,results){
 											if (results.affectedRows>0) {
 												var id = results.id;
 												for (var i = 0; i < product_ids.length; i++) {

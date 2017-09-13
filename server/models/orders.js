@@ -24,18 +24,18 @@ var orders = function(server) {
 			});
 		},
 		//保存退单
-		save_pos_return:function(order_id,actual_price,index, cb) {
-			var query = `insert into orders (id, order_id,marketing_price, actual_price,
+		save_pos_return:function(order_id,actual_price,index,vip_id, cb) {
+			var query = `insert into orders (id, order_id,marketing_price, 		actual_price,vip_id,
 				order_date, order_status, operation_system, origin, pos_id, pay_way,store_id,small_change,operation_person,
 				created_at, updated_at, flag)
 
-				select uuid(),?,?,?,
+				select uuid(),?,?,?,?,
 				now(), 6 , operation_system, origin, pos_id,
 				pay_way,store_id,small_change,operation_person,
 				now(),now(),0 from orders where order_id = ?
 				` ;
 			var id = order_id+"_"+index;
-			var columns=[id, -actual_price, -actual_price, order_id];
+			var columns=[id, -actual_price, -actual_price, vip_id, order_id];
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {
 					connection.release();
