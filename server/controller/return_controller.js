@@ -477,6 +477,10 @@ exports.register = function(server, options, next){
 						if (!vip_id) {
 							vip_id = 1;
 						}
+						var person_id;
+						if (results[0].person_id) {
+							person_id = results[0].person_id;
+						}
 						if (total_price > actual_price) {
 							return reply({"success":false,"message":"退款金额不能超过订单实际支付金额"});
 						}
@@ -503,7 +507,7 @@ exports.register = function(server, options, next){
 								server.plugins['models'].orders.search_return_order(order_id,function(err,results){
 									if (!err) {
 										var index = results.length +1;
-										server.plugins['models'].orders.save_pos_return(order_id,total_price,index,vip_id,function(err,results){
+										server.plugins['models'].orders.save_pos_return(order_id,total_price,index,vip_id,person_id,function(err,results){
 											if (results.affectedRows>0) {
 												var id = results.id;
 												for (var i = 0; i < product_ids.length; i++) {
