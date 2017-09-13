@@ -473,6 +473,10 @@ exports.register = function(server, options, next){
 							return reply({"success":false,"message":"订单不存在！"});
 						}
 						var actual_price = results[0].actual_price;
+						var vip_id = results[0].vip_id;
+						if (!vip_id) {
+							vip_id = 1;
+						}
 						if (total_price > actual_price) {
 							return reply({"success":false,"message":"退款金额不能超过订单实际支付金额"});
 						}
@@ -542,7 +546,7 @@ exports.register = function(server, options, next){
 													"platform_code" : "drp_pos",
 													"address": "上海",
 													"operator":1,
-													"main_role_id":1
+													"main_role_id":vip_id
 												};
 
 												var ep =  eventproxy.create("ali","vip","cash",
