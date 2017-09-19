@@ -604,8 +604,6 @@ exports.register = function(server, options, next){
 												}else {
 													ep.emit("cash", true);
 												}
-
-												return reply({"success":true});
 											}else {
 												return reply({"success":false,"message":results.message});
 											}
