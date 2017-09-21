@@ -74,9 +74,10 @@ server.register([
       register: require('./server/controller/ec_order_controller.js')
     }, {
       register: require('./server/controller/logistics_controller.js')
-    },
-    {
+    },{
       register: require('./server/controller/return_controller.js')
+    },{
+      register: require('./server/controller/online_orders_controller.js')
     },
 
 ], function () {
