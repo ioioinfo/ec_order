@@ -153,10 +153,9 @@ exports.register = function(server, options, next){
 		do_get_method(url,cb);
 	};
 	//删除购物车
-	var delete_shopping_carts = function(ids,cb){
-		var url = "http://127.0.0.1:18015/delete_shopping_carts?ids=";
-		url = url + ids;
-		do_get_method(url,cb);
+	var delete_shopping_carts = function(data,cb){
+		var url = "http://127.0.0.1:18015/delete_shopping_carts";
+		do_post_method(url,data,cb);
 	};
 	//批量查询商品信息
 	var get_productById = function(product_id,cb){
@@ -1159,7 +1158,8 @@ exports.register = function(server, options, next){
 							return reply({"success":true,"success_num":save_success.length,"ids":save_success,"fail_num":save_fail.length,"service_info":service_info});
 						});
 
-						delete_shopping_carts(ids,function(err,content){
+                        var data = {"ids":ids};
+						delete_shopping_carts(data,function(err,content){
 							if (!err) {
 
 							}else {
@@ -1268,7 +1268,8 @@ exports.register = function(server, options, next){
 														}
 													});
 												}
-												delete_shopping_carts(ids,function(err,content){
+                                                var data = {"ids":ids};
+												delete_shopping_carts(data,function(err,content){
 													if (!err) {
 														return reply({"success":true,"order_id":order_id,"service_info":service_info});
 													}else {
