@@ -61,6 +61,7 @@ var generate_order_no = function(cb){
 	};
 	do_post_method(url,data,cb);
 };
+
 //选中购物车信息
 var search_selected_carts = function(person_id,ids,cb){
 	var url = "http://127.0.0.1:18015/search_selected_carts?person_id=";
@@ -78,7 +79,12 @@ var find_products_with_picture = function(product_ids,cb){
 	do_get_method(url,cb);
 };
 exports.register = function(server, options, next){
-
+	//查询ol所有明细
+	var search_online_order_details = function(order_ids,cb){
+		server.plugins['models'].online_orders_details.search_online_order_details(order_ids,function(err,results){
+			cb(err,results);
+		});
+	};
 	server.route([
 		//查询所有
         {
@@ -400,6 +406,76 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
+		//查询订单根据person_id,status
+		{
+			method: 'GET',
+			path: '/search_online_by_status',
+			handler: function(request, reply){
+				var status = request.query.status;
+				var person_id = request.query.person_id;
+				if (!status || !person_id) {
+					return reply({"success":false,"message":"params null","service_info":service_info});
+				}
+				status = JSON.parse(status);
+				server.plugins['models'].online_orders.search_online_by_status(person_id,status,function(err,results){
+					if (!err) {
+						if (!results || results.length == 0) {
+							return reply({"success":true,"message":"ok","orders":results,"details":{},"products":{},"service_info":service_info});
+						}
+						var order_ids = [];
+						for (var i = 0; i < results.length; i++) {
+							order_ids.push(results[i].order_id);
+							results[i].order_status = order_status[results[i].order_status];
+						}
+						search_online_order_details(order_ids,function(error,content){
+							if (!error) {
+								var order_map = {};
+								var product_ids = [];
+								for (var i = 0; i < content.length; i++) {
+									var order_detail = content[i];
+									product_ids.push(order_detail.product_id);
+
+									//判断order_map是否有order_id
+									if (order_map[order_detail.order_id]) {
+										//2.有的话 order_map放入 details 里面
+										var order_details = order_map[order_detail.order_id];
+										//传址！
+										order_details.push(order_detail);
+									} else {
+										// 1.没有的话
+										var order_details = [];
+										order_details.push(order_detail);
+										//order_id 对应 明细
+										order_map[order_detail.order_id] = order_details;
+									}
+								}
+								product_ids = JSON.stringify(product_ids);
+								find_products_with_picture(product_ids,function(err, rows){
+									console.log("rows:"+JSON.stringify(rows));
+									if (!err) {
+										var products = rows.products;
+										var products_map = {};
+										for (var i = 0; i < products.length; i++) {
+											var product = products[i];
+											products_map[product.id] = product;
+										}
+										return reply({"success":true,"message":"ok","orders":results,"details":order_map,"products":products_map,"service_info":service_info});
+									}else {
+										return reply({"success":false,"message":rows.message,"service_info":service_info});
+									}
+								});
+							}else {
+								return reply({"success":false,"message":content.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":results.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+
+
 
 	]);
 

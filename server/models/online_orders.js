@@ -3,6 +3,27 @@ var EventProxy = require('eventproxy');
 
 var online_orders = function(server) {
 	return {
+		//查询订单状态
+		search_online_by_status : function(person_id,order_status,cb){
+			var query = `select order_id, person_id,
+				total_number, actual_price, products_price,
+                order_date, order_status, pay_way,
+				DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S') created_at_text,
+				DATE_FORMAT(updated_at,'%Y-%m-%d %H:%i:%S') updated_at_text
+                from online_orders
+				where flag = 0 and order_status in (?) and person_id = ?` ;
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query,[order_status,person_id], function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,results);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 		//获取所有订单信息
 		search_online_orders:  function(order_ids, cb){
 			var query = `select order_id, person_id,
