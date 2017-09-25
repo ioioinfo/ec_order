@@ -564,6 +564,7 @@ exports.register = function(server, options, next){
 														if (!cash) {
 															return reply({"success":false,"message":"cash return fail"});
 														}
+														return reply({"success":true,"message":"ok"});
 												});
 
 												if (ali_pay!=0) {
