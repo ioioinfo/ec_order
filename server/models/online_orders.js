@@ -3,6 +3,27 @@ var EventProxy = require('eventproxy');
 
 var online_orders = function(server) {
 	return {
+		//获取所有订单信息
+		search_online_orders:  function(order_ids, cb){
+			var query = `select order_id, person_id,
+				total_number, actual_price, products_price,
+                order_date, order_status, pay_way,
+				DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S') created_at_text,
+				DATE_FORMAT(updated_at,'%Y-%m-%d %H:%i:%S') updated_at_text
+                from online_orders where flag = 0 and order_id in (?)
+			`;
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query,[order_ids],function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,null);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
         //获得所有订单
         get_online_orders : function(info, cb){
             var query = `select order_id, person_id,
@@ -116,7 +137,19 @@ var online_orders = function(server) {
                 cb(false,results);
             });
         },
-        
+		//更新订单状态
+		update_online_status : function(id, order_status, cb){
+			var query = `update online_orders set order_status = ?,updated_at = now()
+			where id = ? and flag =0`;
+			server.plugins['mysql'].query(query,[order_status,id], function(err, results) {
+				if (err) {
+					console.log(err);
+					cb(true,results);
+					return;
+				}
+				cb(false,results);
+			});
+		},
 
 
 	};
