@@ -108,6 +108,26 @@ var orders = function(server) {
 				});
 			});
 		},
+		//按门店查询订单
+		search_order_by_store: function(order_id,store_id,cb){
+			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,vip_id,
+				actual_price,order_date,DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text,order_status,store_id,pos_id
+				from orders
+				where order_id =? and flag =0 and store_id = ?
+				order by order_date desc
+			`;
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, [order_id,store_id], function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,results);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 		//获取所有订单信息
 		get_all_orders :  function(params,cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,

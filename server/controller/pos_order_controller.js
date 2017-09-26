@@ -55,6 +55,12 @@ exports.register = function(server, options, next){
 			cb(err,results);
 		});
 	};
+	//查询订单
+	var search_order_by_store = function(order_id,store_id,cb){
+		server.plugins['models'].orders.search_order_by_store(order_id,store_id,function(err,results){
+			cb(err,results);
+		});
+	};
 	//生成pos单号
 	var generate_order_no = function(cb){
 		var url = "http://211.149.248.241:18011/generate_order_no"
@@ -317,10 +323,11 @@ exports.register = function(server, options, next){
 			path: '/find_pos_order',
 			handler: function(request, reply){
 				var order_id = request.query.order_id;
-				if (!order_id) {
+				var store_id = request.query.store_id;
+				if (!order_id || !store_id) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
-				search_order(order_id,function(err, results){
+				search_order_by_store(order_id,store_id,function(err, results){
 					if (!err) {
 						if (results.length>0) {
 							return reply({"success":true,"rows":results,"service_info":service_info});
