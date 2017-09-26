@@ -93,8 +93,8 @@ exports.register = function(server, options, next){
 		});
 	};
 	//根据日期得到订单信息
-	var get_orders_byDate = function(date1,date2,cb){
-		server.plugins['models'].orders.get_orders_byDate(date1,date2,function(err,results){
+	var get_orders_byDate = function(date1,date2,store_id,cb){
+		server.plugins['models'].orders.get_orders_byDate(date1,date2,store_id,function(err,results){
 			cb(err,results);
 		});
 	};
@@ -634,12 +634,16 @@ exports.register = function(server, options, next){
 			method: 'GET',
 			path: '/get_orders_byDate',
 			handler: function(request, reply){
+				var store_id = "";
 				var date1 = request.query.date1;
 				var date2 = request.query.date2;
+				if (request.query.store_id) {
+					store_id = request.query.store_id;
+				}
 				if (!date1 || !date2) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
-				get_orders_byDate(date1,date2,function(err, results){
+				get_orders_byDate(date1,date2,store_id,function(err, results){
 					if (!err) {
 						if (results.length == 0) {
 							return reply({"success":true,"prducts_num":0,"rows":[],"service_info":service_info});

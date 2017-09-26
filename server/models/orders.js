@@ -189,11 +189,19 @@ var orders = function(server) {
 			});
 		},
 		//根据日期查询订单
-		get_orders_byDate :  function(date1,date2,cb){
-			var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,
-			actual_price,order_date,order_status,store_id,pos_id,DATE_FORMAT(created_at,'%Y-%m-%d')created_at_text from orders where flag =0 and order_status in (4,6) and order_date >`+`'`+date1+`'`+` and order_date <`+`'`+date2+`'`+`order by created_at asc `;
+		get_orders_byDate :  function(date1,date2,store_id,cb){
+			var colums=[];
+			if (!store_id || store_id =="") {
+				var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,
+				actual_price,order_date,order_status,store_id,pos_id,DATE_FORMAT(created_at,'%Y-%m-%d')created_at_text from orders where flag =0 and order_status in (4,6) and order_date >`+`'`+date1+`'`+` and order_date <`+`'`+date2+`'`+`order by created_at asc `;
+			}else {
+				var query = `select order_id,person_id,gain_point,card_reduce,small_change,changes,marketing_price,ready_pay,
+				actual_price,order_date,order_status,store_id,pos_id,DATE_FORMAT(created_at,'%Y-%m-%d')created_at_text from orders where flag =0 and order_status in (4,6) and order_date >`+`'`+date1+`'`+` and order_date <`+`'`+date2+`'`+` and store_id =? order by created_at asc `;
+				colums.push(store_id);
+			}
+
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
-				connection.query(query, function(err, results) {
+				connection.query(query, colums, function(err, results) {
 					connection.release();
 					if (err) {
 						console.log(err);
