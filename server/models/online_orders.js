@@ -54,6 +54,11 @@ var online_orders = function(server) {
 				DATE_FORMAT(updated_at,'%Y-%m-%d %H:%i:%S') updated_at_text
                 from online_orders where flag = 0
             `;
+			var colums=[];
+			if (info.order_status) {
+				query = query + " and order_status in (?) ";
+				colums.push(info.order_status);
+			}
 
             if (info.thisPage) {
                 var offset = info.thisPage-1;
@@ -63,7 +68,7 @@ var online_orders = function(server) {
                     query = query + " limit " + offset*20 + ",20";
                 }
             }
-            server.plugins['mysql'].query(query, function(err, results) {
+            server.plugins['mysql'].query(query,colums, function(err, results) {
                 if (err) {
                     console.log(err);
                     cb(true,results);
