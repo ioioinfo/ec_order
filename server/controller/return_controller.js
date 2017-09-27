@@ -332,6 +332,7 @@ exports.register = function(server, options, next){
 				if (!params) {
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
+				params = JSON.parse(params);
                 server.plugins['models'].return_orders_details.return_list(params,function(err,results){
                     if (!err) {
 						if (results.length == 0) {

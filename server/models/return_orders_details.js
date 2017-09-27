@@ -85,7 +85,10 @@ var return_orders_details = function(server) {
 			logistics_company,return_reason,number,created_at,DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S') created_at_text from return_orders_details
 			where flag = ?`;
 			var columns = [0];
-
+			if (params.order_id) {
+				query = query + " and order_id = ? ";
+				columns.push(params.order_id);
+			}
 			query = query +" order by created_at desc";
 			if (params.thisPage) {
 				var offset = params.thisPage-1;
@@ -111,7 +114,10 @@ var return_orders_details = function(server) {
 			var query = `select count(1) num from return_orders_details
 			where flag = ?`;
 			var columns = [0];
-
+			if (params.order_id) {
+				query = query + " and order_id = ? ";
+				columns.push(params.order_id);
+			}
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {
 					connection.release();
