@@ -138,6 +138,10 @@ var orders = function(server) {
 				query = query + " and order_id = ? ";
 				colums.push(params.order_id);
 			}
+			if (params.store_id) {
+				query = query + " and store_id = ? ";
+				colums.push(params.store_id);
+			}
 			if (params.product_id) {
 				query = query + " and exists (select 1 from order_details where product_id=? and order_id = orders.order_id) ";
 				colums.push(params.product_id);
