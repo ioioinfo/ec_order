@@ -63,14 +63,14 @@ var recharge_order = function(server) {
 				marketing_price, actual_price, serial_number, pay_way,
 				pay_date, order_status, DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S')created_at
 				from recharge_order
-				where flag =0 order by created_at desc
+				where flag =0
 			`;
 			var colums=[];
 			if (params.order_id) {
 				query = query + " and order_id = ? ";
 				colums.push(params.order_id);
 			}
-
+			query = query + `order by created_at desc`;
 			if (params.thisPage) {
 				var offset = params.thisPage-1;
 				if (params.everyNum) {
