@@ -312,7 +312,7 @@ exports.register = function(server, options, next){
 					if (results.affectedRows>0) {
 						return reply({"success":true,"message":"ok","service_info":service_info});
 					}else {
-						return reply({"success":false,"message":"save pay_way fail","service_info":service_info});
+						return reply({"success":true,"message":"save pay_way fail","service_info":service_info});
 					}
 				});
 			}
