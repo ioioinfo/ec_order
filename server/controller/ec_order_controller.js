@@ -397,6 +397,21 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
+		//删除订单
+		{
+			method: 'POST',
+			path: '/user_delete',
+			handler: function(request, reply){
+				var order_id = request.payload.order_id;
+				server.plugins['models'].ec_orders.user_delete(order_id,function(err,row){
+					if (row.affectedRows>0) {
+						return reply({"success":true,"message":"ok","service_info":service_info});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 		//查询订单
 		{
 			method: 'GET',

@@ -169,7 +169,7 @@ var ec_orders = function(server) {
 				total_number,logistics_price,actual_price,send_seller,type,
 				products_price,order_date,order_status,store_id,pay_way,created_at
 				from ec_orders
-				where flag =0 and person_id=? order by created_at desc
+				where flag =0 and user_flag = 0 and person_id=? order by created_at desc
 			`;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query,[person_id], function(err, results) {
@@ -206,7 +206,7 @@ var ec_orders = function(server) {
 			var query = `select order_id,person_id,gain_point,card_reduce,mobile,type,
 			total_number,logistics_price,actual_price,linkname,detail_address,send_seller,
 			products_price,order_date,order_status,store_id,pay_way,created_at
-			from ec_orders where person_id = ? and flag = 0 and order_status in (?)` ;
+			from ec_orders where person_id = ? and flag = 0 and user_flag = 0 and order_status in (?)` ;
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query,[person_id,order_status], function(err, results) {
 					connection.release();
@@ -217,6 +217,19 @@ var ec_orders = function(server) {
 					}
 					cb(false,results);
 				});
+			});
+		},
+		//客户删除d订单
+		user_delete : function(order_id,cb){
+			var query = `update ec_orders set user_flag = 1, updated_at = now()
+			where order_id = ? and flag =0`;
+			server.plugins['mysql'].query(query,[order_id], function(err, results) {
+				if (err) {
+					console.log(err);
+					cb(true,results);
+					return;
+				}
+				cb(false,results);
 			});
 		},
 		//更新订单状态
@@ -265,7 +278,7 @@ var ec_orders = function(server) {
 				?,?,?,?,?,?,?,
 				?,?,?,?,?,?,
 				?,?,now(),now(),0,?)` ;
-				
+
 			var columns=[id,order_id,person_id,gain_point,linkname,detail_address,mobile,province,city,district,type,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller,store_name];
 			console.log("columns:"+columns);
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
