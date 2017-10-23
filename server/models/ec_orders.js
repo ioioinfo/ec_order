@@ -3,6 +3,19 @@ var EventProxy = require('eventproxy');
 
 var ec_orders = function(server) {
 	return {
+		//更新订单批次
+		update_order_batch : function(order_id,batch_no,cb){
+			var query = `update ec_orders set batch_no = ?,updated_at = now()
+			where order_id = ? and flag =0`;
+			server.plugins['mysql'].query(query,[batch_no,order_id], function(err, results) {
+				if (err) {
+					console.log(err);
+					cb(true,results);
+					return;
+				}
+				cb(false,results);
+			});
+		},
 		//获取所有订单信息
 		search_orders:  function(order_ids, cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,logistic_id,
@@ -161,7 +174,6 @@ var ec_orders = function(server) {
 				});
 			});
 		},
-
 
 		//获取一个人所有订单信息
 		get_ec_orders :  function(person_id,cb){

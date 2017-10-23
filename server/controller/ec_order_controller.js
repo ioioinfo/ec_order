@@ -173,6 +173,11 @@ exports.register = function(server, options, next){
 		var url = "http://211.149.248.241:12001/batch_unlock_and_outbound";
 		do_post_method(url,data,cb);
 	};
+	//生成批次
+	var get_latest_batch_no = function(cb){
+		var url = "http://211.149.248.241:16022/purchase/get_latest_batch_no?org_code=ioio";
+		do_get_method(url,cb);
+	};
 	server.route([
 		//发货更新状态减少库存
 		{
@@ -613,7 +618,31 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
-
+		//更新订单批次
+		{
+			method: 'POST',
+			path: '/update_order_batch',
+			handler: function(request, reply){
+				var order_id = request.payload.order_id;
+				if (!order_id) {
+					return reply({"success":false,"message":"order_id null","service_info":service_info});
+				}
+				get_latest_batch_no(function(err,row){
+					if (!err) {
+						var batch_no = row.row.batch_no;
+						server.plugins['models'].ec_orders.update_order_batch(order_id,batch_no,function(err,results){
+							if (!err) {
+								return reply({"success":true,"message":"ok","service_info":service_info});
+							}else {
+								return reply({"success":false,"message":results.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 		//保存充值订单
 		{
 			method: 'POST',
