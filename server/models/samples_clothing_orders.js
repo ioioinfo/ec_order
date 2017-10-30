@@ -61,6 +61,20 @@ var samples_clothing_orders = function(server) {
                 });
             });
         },
+		//删除订单
+		sample_order_delete : function(order_id,cb){
+			var query = `update samples_clothing_orders set flag = 1, updated_at = now()
+			where order_id = ? and flag =0`;
+			server.plugins['mysql'].query(query,[order_id], function(err, results) {
+				if (err) {
+					console.log(err);
+					cb(true,results);
+					return;
+				}
+				cb(false,results);
+			});
+		},
+
 
 
 	};

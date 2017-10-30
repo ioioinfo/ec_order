@@ -125,6 +125,42 @@ exports.register = function(server, options, next){
                 });
             }
         },
+		//订制订单删除
+		{
+			method: 'POST',
+			path: '/customing_order_delete',
+			handler: function(request, reply){
+				var order_id = request.payload.order_id;
+				if (!order_id) {
+                    return reply({"success":false,"message":"order_id null","service_info":service_info});
+                }
+				server.plugins['models'].clothing_customing_orders.customing_order_delete(order_id,function(err,result){
+					if (!err) {
+						return reply({"success":true,"message":"ok","service_info":service_info});
+					}else {
+						return reply({"success":false,"message":result.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+		//样品订单删除
+		{
+			method: 'POST',
+			path: '/sample_order_delete',
+			handler: function(request, reply){
+				var order_id = request.payload.order_id;
+				if (!order_id) {
+                    return reply({"success":false,"message":"order_id null","service_info":service_info});
+                }
+				server.plugins['models'].samples_clothing_orders.sample_order_delete(order_id,function(err,result){
+					if (!err) {
+						return reply({"success":true,"message":"ok","service_info":service_info});
+					}else {
+						return reply({"success":false,"message":result.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 
 
 
