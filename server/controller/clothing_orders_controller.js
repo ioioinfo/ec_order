@@ -41,7 +41,7 @@ exports.register = function(server, options, next){
 		var url = "http://211.149.248.241:18011/generate_order_no"
 		var data = {
 			org_code : "ioio",
-			order_type : "customer_clothing_order"
+			order_type : "custom_clothing_order"
 		};
 		do_post_method(url,data,cb);
 	};
