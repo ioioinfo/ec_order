@@ -258,6 +258,86 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
+		//保存订制订单流程
+        {
+            method: 'POST',
+            path: '/save_orders_process',
+            handler: function(request, reply){
+				var order_id = request.payload.order_id;
+				var person_id = request.payload.person_id;
+				var operation = request.payload.operation;
+				var operated_date = request.payload.operated_date;
+				var assigner_id = request.payload.assigner_id;
+
+                if (!order_id || !person_id || !operation || !operated_date) {
+                    return reply({"success":false,"message":"params wrong","service_info":service_info});
+                }
+				var order_process = {
+					"order_id":order_id,
+					"person_id":person_id,
+					"operation":operation,
+					"operated_date":operated_date,
+					"assigner_id":assigner_id
+				};
+                server.plugins['models'].orders_processes.save_orders_process(order_process, function(err,result){
+                    if (!err) {
+                        return reply({"success":true,"message":"ok","service_info":service_info});
+                    }else {
+                        return reply({"success":false,"message":result.message,"service_info":service_info});
+                    }
+                });
+            }
+        },
+		//订单流程更加订单号
+		{
+			method: 'GET',
+			path: '/search_orders_process',
+			handler: function(request, reply){
+				var order_id = request.query.order_id;
+				if (!order_id) {
+					return reply({"success":false,"message":"order_id null","service_info":service_info});
+				}
+				server.plugins['models'].orders_processes.search_orders_process(order_id,function(err,rows){
+					if (!err) {
+						return reply({"success":true,"rows":rows,"service_info":service_info});
+					}else {
+						return reply({"success":false,"message":rows.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+		//修改订制订单
+		{
+			method: 'POST',
+			path: '/update_orders_process',
+			handler: function(request, reply){
+				var id = request.payload.id;
+				var person_id = request.payload.person_id;
+				var operation = request.payload.operation;
+				var operated_date = request.payload.operated_date;
+				var assigner_id = request.payload.assigner_id;
+				if (!id || !person_id || !operation || !operated_date) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				var order_process = {
+					"id":id,
+					"person_id":person_id,
+					"operation":operation,
+					"operated_date":operated_date,
+					"assigner_id":assigner_id
+				};
+				server.plugins['models'].orders_processes.update_orders_process(order_process, function(err,result){
+					if (!err) {
+						return reply({"success":true,"message":"ok","service_info":service_info});
+					}else {
+						return reply({"success":false,"message":result.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+
+
+
 
 
 
