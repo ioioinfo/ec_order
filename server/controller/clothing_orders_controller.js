@@ -161,7 +161,7 @@ exports.register = function(server, options, next){
 				});
 			}
 		},
-		//订单样图保存
+		//订单样图保存 （先查询，没有保存，保存过的删除在新增）
 		{
             method: 'POST',
             path: '/save_order_picture',
@@ -171,13 +171,36 @@ exports.register = function(server, options, next){
 				if (!order_id || !img_location) {
                     return reply({"success":false,"message":"order_id or img_location null","service_info":service_info});
                 }
-                server.plugins['models'].orders_pictures.save_order_picture(order_id,img_location,function(err,result){
-                    if (!err) {
-                        return reply({"success":true,"message":"ok","service_info":service_info});
-                    }else {
-                        return reply({"success":false,"message":result.message,"service_info":service_info});
-                    }
-                });
+				server.plugins['models'].orders_pictures.search_order_picture(order_id,function(err,rows){
+					if (!err) {
+						if (rows.length >0) {
+							server.plugins['models'].orders_pictures.order_picture_delete(order_id,function(err,result){
+								if (!err) {
+									server.plugins['models'].orders_pictures.save_order_picture(order_id,img_location,function(err,result){
+					                    if (!err) {
+					                        return reply({"success":true,"message":"ok","service_info":service_info});
+					                    }else {
+					                        return reply({"success":false,"message":result.message,"service_info":service_info});
+					                    }
+					                });
+								}else {
+									return reply({"success":false,"message":result.message,"service_info":service_info});
+								}
+							});
+						}else {
+							server.plugins['models'].orders_pictures.save_order_picture(order_id,img_location,function(err,result){
+			                    if (!err) {
+			                        return reply({"success":true,"message":"ok","service_info":service_info});
+			                    }else {
+			                        return reply({"success":false,"message":result.message,"service_info":service_info});
+			                    }
+			                });
+						}
+					}else {
+						return reply({"success":false,"message":rows.message,"service_info":service_info});
+					}
+				});
+
             }
         },
 		//查询订单图片根据订单号
