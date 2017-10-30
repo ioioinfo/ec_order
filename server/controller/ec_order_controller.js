@@ -65,6 +65,12 @@ exports.register = function(server, options, next){
 			cb(err,results);
 		});
 	};
+	//获取一个人批次订单信息
+	var get_batch_orders = function(person_id,batch_no,cb){
+		server.plugins['models'].ec_orders.get_batch_orders(person_id,batch_no,function(err,results){
+			cb(err,results);
+		});
+	};
 	//查询ec  单条order信息
 	var get_ec_order = function(order_id,cb){
 		server.plugins['models'].ec_orders.get_ec_order(order_id,function(err,results){
@@ -854,6 +860,72 @@ exports.register = function(server, options, next){
 					return reply({"success":false,"message":"params wrong","service_info":service_info});
 				}
 				get_ec_orders(person_id,function(err, results){
+					if (!err) {
+						if (!results || results.length == 0) {
+							return reply({"success":true,"message":"ok","orders":results,"details":{},"products":{},"service_info":service_info});
+						}
+						var order_ids = [];
+						for (var i = 0; i < results.length; i++) {
+							order_ids.push(results[i].order_id);
+							results[i].order_status = order_status[results[i].order_status];
+						}
+						get_ec_all_details(order_ids,function(error,content){
+							if (!error) {
+								var order_map = {};
+								var product_ids = [];
+								for (var i = 0; i < content.length; i++) {
+									var order_detail = content[i];
+									product_ids.push(order_detail.product_id);
+
+									//判断order_map是否有order_id
+									if (order_map[order_detail.order_id]) {
+										//2.有的话 order_map放入 details 里面
+										var order_details = order_map[order_detail.order_id];
+										//传址！
+										order_details.push(order_detail);
+									} else {
+										// 1.没有的话
+										var order_details = [];
+										order_details.push(order_detail);
+										//order_id 对应 明细
+										order_map[order_detail.order_id] = order_details;
+									}
+								}
+								product_ids = JSON.stringify(product_ids);
+								find_products_with_picture(product_ids,function(err, rows){
+									if (!err) {
+										var products = rows.products;
+										var products_map = {};
+										for (var i = 0; i < products.length; i++) {
+											var product = products[i];
+											products_map[product.id] = product;
+										}
+										return reply({"success":true,"message":"ok","orders":results,"details":order_map,"products":products_map,"service_info":service_info});
+									}else {
+										return reply({"success":false,"message":rows.message,"service_info":service_info});
+									}
+								});
+							}else {
+								return reply({"success":false,"message":content.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":results.message,"service_info":service_info});
+					}
+				});
+			}
+		},
+		//得到个人批次订单
+		{
+			method: 'GET',
+			path: '/get_batch_orders',
+			handler: function(request, reply){
+				var person_id = request.query.person_id;
+				var batch_no = request.query.batch_no;
+				if (!person_id || !batch_no) {
+					return reply({"success":false,"message":"params wrong","service_info":service_info});
+				}
+				get_batch_orders(person_id,batch_no,function(err, results){
 					if (!err) {
 						if (!results || results.length == 0) {
 							return reply({"success":true,"message":"ok","orders":results,"details":{},"products":{},"service_info":service_info});

@@ -195,6 +195,27 @@ var ec_orders = function(server) {
 				});
 			});
 		},
+		//获取一个人批次订单信息
+		get_batch_orders :  function(person_id,batch_no,cb){
+			var query = `select order_id,person_id,gain_point, card_reduce, batch_no,
+				total_number,logistics_price,actual_price,send_seller,type,
+				products_price,order_date,order_status,store_id,pay_way,
+				DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S')created_at
+				from ec_orders
+				where flag =0 and user_flag = 0 and person_id=? and batch_no = ? order by created_at desc
+			`;
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query,[person_id,batch_no], function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,null);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 		//获取一个人单条订单信息
 		get_ec_order :  function(order_id,cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,mobile,type,
