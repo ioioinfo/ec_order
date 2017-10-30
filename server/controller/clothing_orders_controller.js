@@ -36,7 +36,15 @@ var do_result = function(err,result,cb){
 	}
 };
 exports.register = function(server, options, next){
-
+	//生成单号
+	var generate_order_no = function(cb){
+		var url = "http://211.149.248.241:18011/generate_order_no"
+		var data = {
+			org_code : "ioio",
+			order_type : "customer_clothing_order"
+		};
+		do_post_method(url,data,cb);
+	};
 	server.route([
 		//保存样品订单
 		{
@@ -63,14 +71,20 @@ exports.register = function(server, options, next){
                 //     "weight" : "80KG",
                 //     "sample_size" : "42size"
                 // }
-
-                server.plugins['models'].samples_clothing_orders.save_sample_order(order,function(err,result){
-                    if (!err) {
-                        return reply({"success":true,"message":"ok","service_info":service_info});
-                    }else {
-                        return reply({"success":false,"message":result.message,"service_info":service_info});
-                    }
-                });
+				generate_order_no(function(err,row){
+					if (!err) {
+						order.order_id = row.order_no;
+						server.plugins['models'].samples_clothing_orders.save_sample_order(order,function(err,result){
+		                    if (!err) {
+		                        return reply({"success":true,"message":"ok","service_info":service_info});
+		                    }else {
+		                        return reply({"success":false,"message":result.message,"service_info":service_info});
+		                    }
+		                });
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
 			}
 		},
         //保存订制订单
@@ -80,13 +94,20 @@ exports.register = function(server, options, next){
             handler: function(request, reply){
                 var order = request.payload.order;
                 order = JSON.parse(order);
-                server.plugins['models'].clothing_customing_orders.save_customing_order(order,function(err,result){
-                    if (!err) {
-                        return reply({"success":true,"message":"ok","service_info":service_info});
-                    }else {
-                        return reply({"success":false,"message":result.message,"service_info":service_info});
-                    }
-                });
+				generate_order_no(function(err,row){
+					if (!err) {
+						order.order_id = row.order_no;
+						server.plugins['models'].clothing_customing_orders.save_customing_order(order,function(err,result){
+		                    if (!err) {
+		                        return reply({"success":true,"message":"ok","service_info":service_info});
+		                    }else {
+		                        return reply({"success":false,"message":result.message,"service_info":service_info});
+		                    }
+		                });
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
             }
         },
         //获取所有订制订单根据用户
