@@ -15,6 +15,8 @@ exports.register = function(server, options, next){
 	server.expose('poor_orders', require('./poor_orders.js')(server));
 	server.expose('online_orders', require('./online_orders.js')(server));
 	server.expose('online_orders_details', require('./online_orders_details.js')(server));
+	server.expose('samples_clothing_orders', require('./samples_clothing_orders.js')(server));
+	server.expose('clothing_customing_orders', require('./clothing_customing_orders.js')(server));
 
 	next();
 }

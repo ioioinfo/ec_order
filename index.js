@@ -79,6 +79,9 @@ server.register([
     },{
       register: require('./server/controller/online_orders_controller.js')
     },
+    {
+      register: require('./server/controller/clothing_orders_controller.js')
+    },
 
 ], function () {
     //Start the server
