@@ -91,6 +91,96 @@ exports.register = function(server, options, next){
 		});
 	};
 	server.route([
+		//根据personid 和批次 获取订单
+		{
+			method: 'GET',
+			path: '/search_online_batch_orders',
+			handler: function(request, reply){
+				var person_id = request.query.person_id;
+				var batch_no = request.query.batch_no;
+				if (!person_id || !batch_no) {
+					return reply({"success":false,"message":"person_id or batch_no null","service_info":service_info});
+				}
+				server.plugins['models'].online_orders.search_online_batch_orders(person_id, batch_no,function(err,results){
+					if (!err) {
+						if (results.length===0) {
+							return reply({"success":false,"message":"没有订单","service_info":service_info});
+						}
+						var order_ids = [];
+						for (var i = 0; i < results.length; i++) {
+							order_ids.push(results[i].order_id);
+						}
+						server.plugins['models'].online_orders_details.search_online_order_details(order_ids,function(error,content){
+							if (!error) {
+								for (var i = 0; i < results.length; i++) {
+									var details = [];
+									for (var j = 0; j < content.length; j++) {
+										if (results[i].order_id == content[j].order_id) {
+											var order = {};
+											order.order_id = results[i].order_id;
+											order.pay_date = "";
+											order.send_date = "";
+											order.logistics_company = "";
+											order.product_id = content[j].product_id;
+											order.products_industries = "";
+											order.number = content[j].number;
+											order.marketing_price = content[j].marketing_price;
+											order.price = content[j].price;
+											order.child_status = "";
+											order.return_status = "";
+											order.total_price = content[j].total_price;
+											order.person_nickname = "";
+											order.tele_phone = "";
+											details.push(order);
+										}
+
+										results[i].details = details;
+									}
+								}
+								var order_map = {};
+								var product_ids = [];
+								for (var i = 0; i < content.length; i++) {
+									var order_detail = content[i];
+									product_ids.push(order_detail.product_id);
+
+									//判断order_map是否有order_id
+									if (order_map[order_detail.order_id]) {
+										//2.有的话 order_map放入 details 里面
+										var order_details = order_map[order_detail.order_id];
+										//传址！
+										order_details.push(order_detail);
+									} else {
+										// 1.没有的话
+										var order_details = [];
+										order_details.push(order_detail);
+										//order_id 对应 明细
+										order_map[order_detail.order_id] = order_details;
+									}
+								}
+								product_ids = JSON.stringify(product_ids);
+								find_products_with_picture(product_ids,function(err, rows){
+									if (!err) {
+										var products = rows.products;
+										var products_map = {};
+										for (var i = 0; i < products.length; i++) {
+											var product = products[i];
+											products_map[product.id] = product;
+										}
+										return reply({"success":true,"message":"ok","rows":results,"products":products_map,"service_info":service_info});
+									}else {
+										return reply({"success":false,"message":rows.message,"service_info":service_info});
+									}
+								});
+							}else {
+								return reply({"success":false,"message":content.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+			}
+		},
 		//查询所有
         {
             method: "GET",
