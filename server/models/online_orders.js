@@ -93,7 +93,7 @@ var online_orders = function(server) {
         },
         // 保存
 		save_online_orders : function(order, cb){
-			var query = `insert into online_orders(id, order_id, person_id,
+			var query = `insert into online_orders(id, order_id, person_id, batch_no,
 				products_price, total_number, weight, order_status,
                 actual_price, created_at, updated_at,flag)
 				values
@@ -101,7 +101,7 @@ var online_orders = function(server) {
 				?, ?, ?, -1,
 				?, now(), now(),0)
 			`;
-			var coloums = [order.id, order.order_id, order.person_id,
+			var coloums = [order.id, order.order_id, order.person_id, order.batch_no,
 				order.products_price, order.total_number, order.weight,
                 order.actual_price];
 			server.plugins['mysql'].query(query, coloums, function(err, results) {

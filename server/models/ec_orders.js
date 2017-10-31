@@ -3,6 +3,29 @@ var EventProxy = require('eventproxy');
 
 var ec_orders = function(server) {
 	return {
+		//获取所有带批次的订单
+		search_batch_orders:  function(cb){
+			var query = `select order_id,person_id,gain_point,card_reduce,logistic_id,batch_no,
+				total_number,logistics_price,actual_price,send_seller,type,linkname,
+				mobile,detail_address,updated_at,
+				products_price,order_date,order_status,store_id,pay_way,created_at,
+				DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S') created_at_text,
+				DATE_FORMAT(updated_at,'%Y-%m-%d %H:%i:%S') updated_at_text
+				from ec_orders
+				where flag =0 and batch_no is not null
+			`;
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query,function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,null);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 		//更新订单批次
 		update_order_batch : function(order_id,batch_no,cb){
 			var query = `update ec_orders set batch_no = ?,updated_at = now()

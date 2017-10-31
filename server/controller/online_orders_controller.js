@@ -78,6 +78,11 @@ var find_products_with_picture = function(product_ids,cb){
 	var url = "http://127.0.0.1:18002/find_products_with_picture?product_ids="+product_ids;
 	do_get_method(url,cb);
 };
+//生成批次
+var get_latest_batch_no = function(cb){
+	var url = "http://211.149.248.241:16022/purchase/get_latest_batch_no?org_code=ioio";
+	do_get_method(url,cb);
+};
 exports.register = function(server, options, next){
 	//查询ol所有明细
 	var search_online_order_details = function(order_ids,cb){
@@ -139,91 +144,100 @@ exports.register = function(server, options, next){
 				for (var i = 0; i < shopping_carts.length; i++) {
 					ids.push(shopping_carts[i].id);
 				}
-				search_selected_carts(person_id,JSON.stringify(ids),function(err,results){
+				get_latest_batch_no(function(err,row){
 					if (!err) {
-						var data_base_carts = results.shopping_carts;
-						var data_base_products = results.products;
-						var data_base_total_data = results.total_data;
-						var products = data_base_products;
-						//是否存在选择商品
-						if (data_base_carts.length==0) {
-							return reply({"success":false,"message":"没有选择商品在购物车里"});
-						}
-						//和页面传的购物车里信息核实
-						for (var i = 0; i < shopping_carts.length; i++) {
-							var per_price = shopping_carts[i].per_price;
-							//商品单价对比
-							if (shopping_carts[i].product_id == data_base_products[shopping_carts[i].product_id].id) {
-								if (per_price != data_base_products[shopping_carts[i].product_id].product_sale_price) {
-									return reply({"success":false,"message":"商品价格有问题！"});
-								}
-							}
-						}
-						//商品总数，总价对比
-						if (total_data.total_prices != data_base_total_data.total_prices ) {
-							return reply({"success":false,"message":"商品总价有问题！"});
-						}
-						if (total_data.total_items != data_base_total_data.total_items) {
-							return reply({"success":false,"message":"商品总数量有问题！"});
-						}
-
-						generate_order_no(function(err,row){
+						var batch_no = row.row.batch_no;
+						search_selected_carts(person_id,JSON.stringify(ids),function(err,results){
 							if (!err) {
-								var order = {
-									"person_id":person_id,
-									"products_price":data_base_total_data.total_prices,
-									"total_number":data_base_total_data.total_items,
-									"weight":data_base_total_data.total_weight,
-									"actual_price":data_base_total_data.total_prices
-								};
-								if (!order.weight) {
-									order.weight = 0;
+								var data_base_carts = results.shopping_carts;
+								var data_base_products = results.products;
+								var data_base_total_data = results.total_data;
+								var products = data_base_products;
+								//是否存在选择商品
+								if (data_base_carts.length==0) {
+									return reply({"success":false,"message":"没有选择商品在购物车里"});
 								}
-								order.order_id = row.order_no;
-								order.id = uuidV1();
-								server.plugins['models'].online_orders.save_online_orders(order, function(err,result){
-									if (result.affectedRows>0) {
-										for (var i = 0; i < shopping_carts.length; i++) {
-											var price = products[shopping_carts[i].product_id].product_sale_price;
-											var number = shopping_carts[i].total_items;
-											var order_detail = {
-												"order_id" : order.order_id,
-												"product_id" : shopping_carts[i].product_id,
-												"order_index" :i+1,
-												"number" : number,
-												"price" : price,
-												"marketing_price" : products[shopping_carts[i].product_id].product_marketing_price,
-												"total_price" : price * number,
-												"sku_id": shopping_carts[i].sku_id
-											};
-											server.plugins['models'].online_orders_details.save_online_orders_detail(order_detail, function(err,result){
-												if (result.affectedRows>0) {
-
-												}else {
-													return reply({"success":false,"message":result.message,"service_info":service_info});
-												}
-											});
+								//和页面传的购物车里信息核实
+								for (var i = 0; i < shopping_carts.length; i++) {
+									var per_price = shopping_carts[i].per_price;
+									//商品单价对比
+									if (shopping_carts[i].product_id == data_base_products[shopping_carts[i].product_id].id) {
+										if (per_price != data_base_products[shopping_carts[i].product_id].product_sale_price) {
+											return reply({"success":false,"message":"商品价格有问题！"});
 										}
-										ids = JSON.stringify(ids);
-										var data = {"ids":ids};
-										delete_shopping_carts(data,function(err,content){
-											if (!err) {
-												return reply({"success":true,"order_id":order.order_id,"service_info":service_info});
+									}
+								}
+								//商品总数，总价对比
+								if (total_data.total_prices != data_base_total_data.total_prices ) {
+									return reply({"success":false,"message":"商品总价有问题！"});
+								}
+								if (total_data.total_items != data_base_total_data.total_items) {
+									return reply({"success":false,"message":"商品总数量有问题！"});
+								}
+
+								generate_order_no(function(err,row){
+									if (!err) {
+										var order = {
+											"person_id":person_id,
+											"products_price":data_base_total_data.total_prices,
+											"total_number":data_base_total_data.total_items,
+											"weight":data_base_total_data.total_weight,
+											"actual_price":data_base_total_data.total_prices
+										};
+										if (!order.weight) {
+											order.weight = 0;
+										}
+										order.order_id = row.order_no;
+										order.id = uuidV1();
+										order.batch_no = batch_no;
+										server.plugins['models'].online_orders.save_online_orders(order, function(err,result){
+											if (result.affectedRows>0) {
+												for (var i = 0; i < shopping_carts.length; i++) {
+													var price = products[shopping_carts[i].product_id].product_sale_price;
+													var number = shopping_carts[i].total_items;
+													var order_detail = {
+														"order_id" : order.order_id,
+														"product_id" : shopping_carts[i].product_id,
+														"order_index" :i+1,
+														"number" : number,
+														"price" : price,
+														"marketing_price" : products[shopping_carts[i].product_id].product_marketing_price,
+														"total_price" : price * number,
+														"sku_id": shopping_carts[i].sku_id
+													};
+													server.plugins['models'].online_orders_details.save_online_orders_detail(order_detail, function(err,result){
+														if (result.affectedRows>0) {
+
+														}else {
+															return reply({"success":false,"message":result.message,"service_info":service_info});
+														}
+													});
+												}
+												ids = JSON.stringify(ids);
+												var data = {"ids":ids};
+												delete_shopping_carts(data,function(err,content){
+													if (!err) {
+														return reply({"success":true,"order_id":order.order_id,"service_info":service_info});
+													}else {
+														return reply({"success":false,"message":results.message,"service_info":service_info});
+													}
+												});
 											}else {
-												return reply({"success":false,"message":results.message,"service_info":service_info});
+												return reply({"success":false,"message":result.message,"service_info":service_info});
 											}
 										});
 									}else {
-										return reply({"success":false,"message":result.message,"service_info":service_info});
+										return reply({"success":false,"message":row.message,"service_info":service_info});
 									}
 								});
+
 							}else {
-								return reply({"success":false,"message":row.message,"service_info":service_info});
+								return reply({"success":false,"message":"购物车查不到"});
 							}
 						});
 
 					}else {
-						return reply({"success":false,"message":"购物车查不到"});
+						return reply({"success":false,"message":row.message,"service_info":service_info});
 					}
 				});
 
