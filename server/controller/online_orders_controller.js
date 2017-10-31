@@ -83,6 +83,11 @@ var get_latest_batch_no = function(cb){
 	var url = "http://211.149.248.241:16022/purchase/get_latest_batch_no?org_code=ioio";
 	do_get_method(url,cb);
 };
+//查询产品分类
+var get_product_sorts = function(product_ids,cb){
+	var url = "http://127.0.0.1:18002/get_product_sorts?product_ids="+product_ids;
+	do_get_method(url,cb);
+};
 exports.register = function(server, options, next){
 	//查询ol所有明细
 	var search_online_order_details = function(order_ids,cb){
@@ -121,8 +126,47 @@ exports.register = function(server, options, next){
 										data_map[rows[i].batch_no].jine = data_map[rows[i].batch_no].jine + rows[i].actual_price;
 									}
 									var order_ids = data_map[batch_no].order_ids;
-									
-									return reply({"success":true,"row":order_ids,"service_info":service_info});
+									server.plugins['models'].online_orders_details.search_online_order_details(order_ids,function(error,content){
+										if (!error) {
+											var product_map = {};
+											var product_ids = [];
+											for (var i = 0; i < content.length; i++) {
+												var order_detail = content[i];
+												if (!product_map[order_detail.product_id]) {
+													var data = {
+														"num" : 0,
+														"jine" : 0.0
+													};
+													product_map[order_detail.product_id] = data;
+													product_ids.push(order_detail.product_id);
+												}
+												product_map[order_detail.product_id].num = product_map[order_detail.product_id].num + order_detail.number;
+												product_map[order_detail.product_id].jine = product_map[order_detail.product_id].jine + order_detail.total_price;
+
+											}
+											product_ids = JSON.stringify(product_ids);
+											get_product_sorts(product_ids,function(err,rows){
+												if (!err) {
+													var sort_list = rows.rows;
+													for (var i = 0; i < sort_list.length; i++) {
+														sort_list[i].jine = 0.0;
+														sort_list[i].num = 0;
+														for (var j = 0; j < sort_list[i].product_ids.length; j++) {
+															var id = sort_list[i].product_ids[j];
+															sort_list[i].jine = sort_list[i].jine + product_map[id].jine;
+															sort_list[i].num = sort_list[i].num + product_map[id].num;
+														}
+													}
+
+													return reply({"success":true,"rows":sort_list,"service_info":service_info});
+												}else {
+													return reply({"success":false,"message":rows.message,"service_info":service_info});
+												}
+											});
+										}else {
+											return reply({"success":false,"message":content.message,"service_info":service_info});
+										}
+									});
 								}
 							}else {
 								return reply({"success":false,"message":rows.message,"service_info":service_info});
@@ -134,7 +178,7 @@ exports.register = function(server, options, next){
 				});
             }
         },
-		//获取所有带批次的订单
+		//获取最新批次信息
         {
             method: "GET",
             path: '/search_lastest_batch_infos',
