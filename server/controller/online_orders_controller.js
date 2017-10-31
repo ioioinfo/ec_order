@@ -196,6 +196,7 @@ exports.register = function(server, options, next){
 									for (var i = 0; i < rows.length; i++) {
 										if (!data_map[rows[i].batch_no]) {
 											var data = {
+												"batch_no": batch_no,
 												"order_ids" : [],
 												"num" : 0,
 												"jine" : 0.0
