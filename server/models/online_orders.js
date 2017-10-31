@@ -3,6 +3,27 @@ var EventProxy = require('eventproxy');
 
 var online_orders = function(server) {
 	return {
+		//获取所有带批次的订单
+		search_all_batch_orders:  function(cb){
+			var query = `select order_id, person_id, batch_no,
+				total_number, actual_price, products_price,
+                order_date, order_status, pay_way,
+				DATE_FORMAT(created_at,'%Y-%m-%d %H:%i:%S') created_at_text,
+				DATE_FORMAT(updated_at,'%Y-%m-%d %H:%i:%S') updated_at_text
+                from online_orders where flag = 0 and batch_no is not null and batch_no != "" 
+			`;
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query,function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,null);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 		//根据personid 和批次 获取订单
 		search_online_batch_orders:  function(person_id, batch_no, cb){
 			var query = `select order_id, person_id, batch_no,

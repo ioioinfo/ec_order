@@ -91,6 +91,90 @@ exports.register = function(server, options, next){
 		});
 	};
 	server.route([
+		//获取所有带批次的商品信息
+        {
+            method: "GET",
+            path: '/search_batch_products_infos',
+            handler: function(request, reply) {
+				get_latest_batch_no(function(err,row){
+					if (!err) {
+						var batch_no = row.row.batch_no;
+						server.plugins['models'].online_orders.search_all_batch_orders(function(err,rows){
+		                    if (!err) {
+								var data_map = {};
+								var batch_list = [];
+								if (rows.length == 0) {
+									return reply({"success":true,"batch_list":batch_list,"data":data,"service_info":service_info});
+								}else {
+									for (var i = 0; i < rows.length; i++) {
+										if (!data_map[rows[i].batch_no]) {
+											var data = {
+												"order_ids" : [],
+												"num" : 0,
+												"jine" : 0.0
+											};
+											data_map[rows[i].batch_no] = data;
+											batch_list.push(rows[i].batch_no);
+										}
+										data_map[rows[i].batch_no].order_ids.push(rows[i].order_id);
+										data_map[rows[i].batch_no].num = data_map[rows[i].batch_no].num + rows[i].total_number;
+										data_map[rows[i].batch_no].jine = data_map[rows[i].batch_no].jine + rows[i].actual_price;
+									}
+									var order_ids = data_map[batch_no].order_ids;
+									
+									return reply({"success":true,"row":order_ids,"service_info":service_info});
+								}
+							}else {
+								return reply({"success":false,"message":rows.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+            }
+        },
+		//获取所有带批次的订单
+        {
+            method: "GET",
+            path: '/search_lastest_batch_infos',
+            handler: function(request, reply) {
+				get_latest_batch_no(function(err,row){
+					if (!err) {
+						var batch_no = row.row.batch_no;
+						server.plugins['models'].online_orders.search_all_batch_orders(function(err,rows){
+		                    if (!err) {
+								var data_map = {};
+								var batch_list = [];
+								if (rows.length == 0) {
+									return reply({"success":true,"row":{},"service_info":service_info});
+								}else {
+									for (var i = 0; i < rows.length; i++) {
+										if (!data_map[rows[i].batch_no]) {
+											var data = {
+												"order_ids" : [],
+												"num" : 0,
+												"jine" : 0.0
+											};
+											data_map[rows[i].batch_no] = data;
+											batch_list.push(rows[i].batch_no);
+										}
+										data_map[rows[i].batch_no].order_ids.push(rows[i].order_id);
+										data_map[rows[i].batch_no].num = data_map[rows[i].batch_no].num + rows[i].total_number;
+										data_map[rows[i].batch_no].jine = data_map[rows[i].batch_no].jine + rows[i].actual_price;
+									}
+									return reply({"success":true,"row":data_map[batch_no],"service_info":service_info});
+								}
+							}else {
+								return reply({"success":false,"message":rows.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+            }
+        },
 		//根据personid 和批次 获取订单
 		{
 			method: 'GET',
