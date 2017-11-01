@@ -88,6 +88,11 @@ var get_product_sorts = function(product_ids,cb){
 	var url = "http://127.0.0.1:18002/get_product_sorts?product_ids="+product_ids;
 	do_get_method(url,cb);
 };
+//查询产品
+var find_products = function(product_ids,cb){
+	var url = "http://127.0.0.1:18002/find_products?product_ids="+product_ids;
+	do_get_method(url,cb);
+};
 exports.register = function(server, options, next){
 	//查询ol所有明细
 	var search_online_order_details = function(order_ids,cb){
@@ -96,6 +101,95 @@ exports.register = function(server, options, next){
 		});
 	};
 	server.route([
+		//获取所有带批次的门店信息
+        {
+            method: "GET",
+            path: '/search_batch_stores_infos',
+            handler: function(request, reply) {
+				get_latest_batch_no(function(err,row){
+					if (!err) {
+						var batch_no = row.row.batch_no;
+						server.plugins['models'].online_orders.search_all_batch_orders(function(err,rows){
+		                    if (!err) {
+								var data_map = {};
+								var batch_list = [];
+								if (rows.length == 0) {
+									return reply({"success":true,"batch_list":batch_list,"data":data,"service_info":service_info});
+								}else {
+									for (var i = 0; i < rows.length; i++) {
+										if (!data_map[rows[i].batch_no]) {
+											var data = {
+												"order_ids" : [],
+												"num" : 0,
+												"jine" : 0.0
+											};
+											data_map[rows[i].batch_no] = data;
+											batch_list.push(rows[i].batch_no);
+										}
+										data_map[rows[i].batch_no].order_ids.push(rows[i].order_id);
+										data_map[rows[i].batch_no].num = data_map[rows[i].batch_no].num + rows[i].total_number;
+										data_map[rows[i].batch_no].jine = data_map[rows[i].batch_no].jine + rows[i].actual_price;
+									}
+									var order_ids = data_map[batch_no].order_ids;
+									server.plugins['models'].online_orders_details.search_online_order_details(order_ids,function(error,content){
+										if (!error) {
+											var product_map = {};
+											var product_ids = [];
+											for (var i = 0; i < content.length; i++) {
+												var order_detail = content[i];
+												if (!product_map[order_detail.product_id]) {
+													var data = {
+														"num" : 0,
+														"jine" : 0.0
+													};
+													product_map[order_detail.product_id] = data;
+													product_ids.push(order_detail.product_id);
+												}
+												product_map[order_detail.product_id].num = product_map[order_detail.product_id].num + order_detail.number;
+												product_map[order_detail.product_id].jine = product_map[order_detail.product_id].jine + order_detail.total_price;
+
+											}
+											product_ids = JSON.stringify(product_ids);
+											find_products(product_ids,function(err,rows){
+												if (!err) {
+													var products = rows.rows;
+													var store_map = {};
+													var store_list = [];
+													for (var i = 0; i < products.length; i++) {
+														var product = products[i];
+														if (!store_map[product.origin]) {
+															var data = {
+																"store_name": store_map[product.origin],
+																"num" : 0,
+																"jine" : 0.0
+															};
+															store_map[product.origin] = data;
+															store_list.push(store_map);
+														}
+														store_map[product.origin].num = store_map[product.origin].num + product_map[product.id].num;
+														store_map[product.origin].jine = store_map[product.origin].jine + product_map[product.id].jine;
+													}
+
+													return reply({"success":true,"rows":store_list,"service_info":service_info});
+												}else {
+													return reply({"success":false,"message":rows.message,"service_info":service_info});
+												}
+											});
+										}else {
+											return reply({"success":false,"message":content.message,"service_info":service_info});
+										}
+									});
+								}
+							}else {
+								return reply({"success":false,"message":rows.message,"service_info":service_info});
+							}
+						});
+					}else {
+						return reply({"success":false,"message":row.message,"service_info":service_info});
+					}
+				});
+            }
+        },
 		//获取所有带批次的商品信息
         {
             method: "GET",
