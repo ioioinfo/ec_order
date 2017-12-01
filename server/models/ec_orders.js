@@ -3,6 +3,43 @@ var EventProxy = require('eventproxy');
 
 var ec_orders = function(server) {
 	return {
+		//获取所有线上订单信息
+		get_online_orders_data:  function(date, cb){
+			var query = `select e.order_id 'order_id', d.product_id 'id', p.product_name 'product_name', s.sort_name 'sort_name', p.origin 'origin', d.number 'number', d.price 'price', d.total_price 'total_price', e.order_status 'order_status', e.person_id 'person_id', e.logistics_price 'logistics_price', e.actual_price 'actual_price', e.total_number 'total_number',  DATE_FORMAT(e.created_at,'%Y-%m-%d') 'created_at'
+
+				from ec_orders  e
+
+				left join ec_orders_details d
+
+				on e.order_id = d.order_id
+
+				left join ec_product.products p
+
+				on d.product_id = p.id
+
+				left join ec_product.products_sorts s
+
+				on p.sort_id = s.id
+
+				where  e.order_status not in ('-1','0','7','9')
+			`;
+			if (date.date1 && date.date2) {
+
+				query = query + ` and e.created_at >= '` + date.date1 + `' ` + ` and e.created_at <='`+ date.date2+`' `;
+
+			}
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,null);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 		//获取所有带批次的订单
 		search_batch_orders:  function(cb){
 			var query = `select order_id,person_id,gain_point,card_reduce,logistic_id,batch_no,

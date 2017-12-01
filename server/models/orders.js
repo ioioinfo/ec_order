@@ -4,6 +4,43 @@ var EventProxy = require('eventproxy');
 var orders = function(server) {
 	return {
 		//pos端
+		//获取所有线下订单信息
+		get_offline_orders_data:  function(date, cb){
+			var query = `select o.order_id 'order_id', d.product_id 'product_id', p.product_name 'product_name', s.sort_name 'sort_name', p.origin 'origin', d.number 'number', d.price 'price', d.total_price 'total_price', o.person_id 'person_id', o.vip_id 'vip_id', o.actual_price 'actual_price', o.pos_id 'pos_id', o.store_id 'store_id',  DATE_FORMAT(o.created_at,'%Y-%m-%d') 'created_at'
+
+				from orders o
+
+				left join order_details d
+
+				on o.order_id = d.order_id
+
+				left join ec_product.products p
+
+				on d.product_id = p.id
+
+				left join ec_product.products_sorts s
+
+				on p.sort_id = s.id
+
+				where o.order_status= '4'
+			`;
+			if (date.date1 && date.date2) {
+
+				query = query + ` and o.created_at >= '` + date.date1 + `' ` + ` and o.created_at <='`+ date.date2+`' `;
+
+			}
+			server.plugins['mysql'].pool.getConnection(function(err, connection) {
+				connection.query(query, function(err, results) {
+					connection.release();
+					if (err) {
+						console.log(err);
+						cb(true,null);
+						return;
+					}
+					cb(false,results);
+				});
+			});
+		},
 		//退单查询
 		search_return_order: function(order_id,cb){
 			var query = `select id, order_id, marketing_price, actual_price, order_date, DATE_FORMAT(order_date,'%Y-%m-%d %H:%i:%S') order_date_text, order_status, store_id, pos_id
