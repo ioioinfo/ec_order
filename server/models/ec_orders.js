@@ -5,7 +5,7 @@ var ec_orders = function(server) {
 	return {
 		//获取所有线上订单信息
 		get_online_orders_data:  function(date, cb){
-			var query = `select e.order_id 'order_id', d.product_id 'id', p.product_name 'product_name', s.sort_name 'sort_name', p.origin 'origin', d.number 'number', d.price 'price', d.total_price 'total_price', e.order_status 'order_status', e.person_id 'person_id', e.logistics_price 'logistics_price', e.actual_price 'actual_price', e.total_number 'total_number',  DATE_FORMAT(e.created_at,'%Y-%m-%d') 'created_at'
+			var query = `select e.order_id 'order_id', d.product_id 'product_id', p.product_name 'product_name', s.sort_name 'sort_name', p.origin 'origin', d.number 'number', d.price 'price', d.total_price 'total_price', e.order_status 'order_status', e.person_id 'person_id', e.logistics_price 'logistics_price', e.actual_price 'actual_price', e.total_number 'total_number',  DATE_FORMAT(e.created_at,'%Y-%m-%d') 'created_at'
 
 				from ec_orders  e
 
