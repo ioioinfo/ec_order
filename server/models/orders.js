@@ -6,7 +6,7 @@ var orders = function(server) {
 		//pos端
 		//获取所有线下订单信息
 		get_offline_orders_data:  function(date, cb){
-			var query = `select o.order_id 'order_id', d.product_id 'product_id', p.product_name 'product_name', s.sort_name 'sort_name', p.origin 'origin', d.number 'number', d.price 'price', d.total_price 'total_price', o.person_id 'person_id', o.vip_id 'vip_id', o.actual_price 'actual_price', o.pos_id 'pos_id', o.store_id 'store_id',  DATE_FORMAT(o.created_at,'%Y-%m-%d') 'created_at'
+			var query = `select o.order_id 'order_id', d.product_id 'product_id', p.product_name 'product_name', s.sort_name 'sort_name', p.origin 'origin', d.number 'number', d.price 'price', d.total_price 'total_price', o.person_id 'person_id', o.vip_id 'vip_id', o.actual_price 'actual_price', o.pos_id 'pos_id', o.store_id 'store_id',  DATE_FORMAT(o.created_at,'%Y-%m-%d %H:%i:%S') 'created_at'
 
 				from orders o
 
