@@ -668,6 +668,7 @@ exports.register = function(server, options, next){
 			method: 'POST',
 			path: '/save_fast_order_infos',
 			handler: function(request, reply){
+			    var platform_code = request.payload.platform_code;
 				var person_id = request.payload.person_id;
 				var send_seller = request.payload.send_seller;
 				var address = request.payload.address;
@@ -681,7 +682,7 @@ exports.register = function(server, options, next){
 				get_productById(product_id,function(err,content){
 					if (!err) {
 						var product = content.row;
-						var origin = "ec_mp";
+						var origin = platform_code || "ec_mp";
 						var products_price = product.product_sale_price*parseInt(number);
 						var gain_point = products_price;
 						var total_number = number;
@@ -1140,6 +1141,7 @@ exports.register = function(server, options, next){
 			method: 'POST',
 			path: '/save_order_infos2',
 			handler: function(request, reply){
+			    var platform_code = request.payload.platform_code;
 				var person_id = request.payload.person_id;
 				var total_data = request.payload.total_data;
 				var shopping_carts = request.payload.shopping_carts;
@@ -1152,6 +1154,7 @@ exports.register = function(server, options, next){
 				shopping_carts = JSON.parse(shopping_carts);
 				total_data = JSON.parse(total_data);
 				logistics_total = JSON.parse(logistics_total);
+				
 				var ids = [];
 				for (var i = 0; i < shopping_carts.length; i++) {
 					ids.push(shopping_carts[i].id);
@@ -1208,7 +1211,7 @@ exports.register = function(server, options, next){
 							}
 							var actual_price = logistics_price + products_price;
 							console.log("total_data:"+JSON.stringify(total_data));
-							var origin = "ec_mp";
+							var origin = platform_code || "ec_mp";
 							var store_name = mendian;
 
 							generate_order_no("ec_order",function(err,row){
@@ -1276,6 +1279,7 @@ exports.register = function(server, options, next){
 			method: 'POST',
 			path: '/save_order_infos',
 			handler: function(request, reply){
+			    var platform_code = request.payload.platform_code;
 				var person_id = request.payload.person_id;
 				var total_data = request.payload.total_data;
 				var shopping_carts = request.payload.shopping_carts;
@@ -1322,7 +1326,7 @@ exports.register = function(server, options, next){
 						var order_status = -1;
 						//details data
 						var products = data_base_products;
-						var origin = "ec_mp";
+						var origin = platform_code || "ec_mp";
 						if (!weight) {
 							weight = 0;
 						}
