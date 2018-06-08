@@ -1,9 +1,24 @@
-// Base routes for item..
+/**
+ ┌──────────────────────────────────────────────────────────────┐
+ │               ___ ___ ___ ___ ___ _  _ ___ ___               │
+ │              |_ _/ _ \_ _/ _ \_ _| \| | __/ _ \              │
+ │               | | (_) | | (_) | || .` | _| (_) |             │
+ │              |___\___/___\___/___|_|\_|_| \___/              │
+ │                                                              │
+ │                                                              │
+ │                       set up in 2015.2                       │
+ │                                                              │
+ │   committed to the intelligent transformation of the world   │
+ │                                                              │
+ └──────────────────────────────────────────────────────────────┘
+*/
+
 const uu_request = require('../utils/uu_request');
 const uuidV1 = require('uuid/v1');
 var async = require('async');
 var eventproxy = require('eventproxy');
 var service_info = "ec order service";
+
 var order_status = {
 	"-1": "等待买家付款",
 	"0" : "付款确认中",
@@ -21,43 +36,11 @@ var order_status = {
 	"12" : "等待买家评价"
 };
 
-var do_get_method = function(url,cb){
-	uu_request.get(url, function(err, response, body){
-		if (!err && response.statusCode === 200) {
-			var content = JSON.parse(body);
-			do_result(false, content, cb);
-		} else {
-			cb(true, null);
-		}
-	});
-};
-//所有post调用接口方法
-var do_post_method = function(url,data,cb){
-	uu_request.request(url, data, function(err, response, body) {
-		if (!err && response.statusCode === 200) {
-			do_result(false, body, cb);
-		} else {
-			cb(true,null);
-		}
-	});
-};
-//处理结果
-var do_result = function(err,result,cb){
-	if (!err) {
-		if (result.success) {
-			cb(false,result);
-		}else {
-			cb(true,result);
-		}
-	}else {
-		cb(true,null);
-	}
-};
 exports.register = function(server, options, next){
 	//物流运费
 	var logistics_payment = function(data,cb){
 		var url = "http://211.149.248.241:18013/freightage/compute";
-		do_post_method(url,data,cb);
+		uu_request.do_post_method(url,data,cb);
 	};
 	//查询ec所有订单
 	var get_ec_orders = function(person_id,cb){
@@ -86,7 +69,7 @@ exports.register = function(server, options, next){
 	//批量查询商品信息
 	var find_products_with_picture = function(product_ids,cb){
 		var url = "http://127.0.0.1:18002/find_products_with_picture?product_ids="+product_ids;
-		do_get_method(url,cb);
+		uu_request.do_get_method(url,cb);
 	};
 	//查询订单地址信息
 	var search_order_address = function(person_id,cb){
@@ -103,12 +86,12 @@ exports.register = function(server, options, next){
 	//查询最新物流信息
 	var search_logistics_info = function(order_id,cb){
 		var url = "http://211.149.248.241:18013/logistics/get_latest_by_order?order_id="+order_id;
-		do_get_method(url,cb);
+		uu_request.do_get_method(url,cb);
 	};
 	//查询物流信息全
 	var search_logistics_infos = function(order_id,cb){
 		var url = "http://211.149.248.241:18013/logistics/list_by_order?order_id="+order_id;
-		do_get_method(url,cb);
+		uu_request.do_get_method(url,cb);
 	};
 	//更新订单状态
 	var update_order_status = function(order_id,order_status,cb){
@@ -119,7 +102,7 @@ exports.register = function(server, options, next){
 	//解库
 	var unlock_stock = function(data,cb){
 		var url = "http://211.149.248.241:12001/batch_unlock_stock";
-		do_post_method(url,data,cb);
+		uu_request.do_post_method(url,data,cb);
 	}
 	//更新收货时间
 	var updata_receive_time = function(order_id,cb){
@@ -137,7 +120,7 @@ exports.register = function(server, options, next){
 	var search_selected_carts = function(person_id,ids,cb){
 		var url = "http://127.0.0.1:18015/search_selected_carts?person_id=";
 		url = url + person_id + "&ids=" + ids;
-		do_get_method(url,cb);
+		uu_request.do_get_method(url,cb);
 	};
 	//生成pos单号
 	var generate_order_no = function(order_type,cb){
@@ -146,27 +129,27 @@ exports.register = function(server, options, next){
 			org_code : "ioio",
 			order_type : order_type
 		};
-		do_post_method(url,data,cb);
+		uu_request.do_post_method(url,data,cb);
 	};
 	//发货时间
 	var delivery_time_by_order = function(order_id,cb){
 		var url = "http://211.149.248.241:18013/logistics/delivery_time_by_order?org_code=ioio&order_id="+order_id;
-		do_get_method(url,cb);
+		uu_request.do_get_method(url,cb);
 	}
 	//订单信息
 	var get_order_pay_infos = function(order_id,cb){
 		var url = "http://139.196.148.40:18008/get_order_pay_infos?sob_id=ioio&order_id="+order_id;
-		do_get_method(url,cb);
+		uu_request.do_get_method(url,cb);
 	};
 	//删除购物车
 	var delete_shopping_carts = function(data,cb){
 		var url = "http://127.0.0.1:18015/delete_shopping_carts";
-		do_post_method(url,data,cb);
+		uu_request.do_post_method(url,data,cb);
 	};
 	//批量查询商品信息
 	var get_productById = function(product_id,cb){
 		var url = "http://127.0.0.1:18002/product_info?product_id="+product_id;
-		do_get_method(url,cb);
+		uu_request.do_get_method(url,cb);
 	};
 	//查询ec所有订单
 	var get_orders_list = function(cb){
@@ -177,12 +160,12 @@ exports.register = function(server, options, next){
 	//解库加出库
 	var batch_unlock_and_outbound = function(data,cb){
 		var url = "http://211.149.248.241:12001/batch_unlock_and_outbound";
-		do_post_method(url,data,cb);
+		uu_request.do_post_method(url,data,cb);
 	};
 	//生成批次
 	var get_latest_batch_no = function(cb){
 		var url = "http://211.149.248.241:16022/purchase/get_latest_batch_no?org_code=ioio";
-		do_get_method(url,cb);
+		uu_request.do_get_method(url,cb);
 	};
 	server.route([
 		//发货更新状态减少库存

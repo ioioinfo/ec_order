@@ -373,7 +373,7 @@ var ec_orders = function(server) {
 				?,?,now(),now(),0,?)` ;
 
 			var columns=[id,order_id,person_id,gain_point,linkname,detail_address,mobile,province,city,district,type,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller,store_name];
-			console.log("columns:"+columns);
+
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
 				connection.query(query, columns, function(err, results) {
 					connection.release();
@@ -404,7 +404,7 @@ var ec_orders = function(server) {
 				?,?,?,?,?,?,?,
 				?,?,?,?,?,?,
 				?,?,now(),now(),0,?)` ;
-			console.log(query);
+
 			var columns=[id,order_id,person_id,gain_point,linkname,detail_address,mobile,province,city,district,type,products_price,total_number,weight,order_status,origin,logistics_price,actual_price,send_seller,store_name];
 			console.log("columns:"+columns);
 			server.plugins['mysql'].pool.getConnection(function(err, connection) {
